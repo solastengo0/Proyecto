@@ -1,0 +1,15 @@
+---
+title: "Borrador"
+author: "Sol Astengo"
+format: pdf
+---
+
+```{r}
+library(here)
+library(readxl)
+receptivo <- read_excel(here::here(
+  "receptivo.xlsx"
+  ))
+View(receptivo)
+```
+
