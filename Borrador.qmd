@@ -12,4 +12,14 @@ receptivo <- read_excel(here::here(
   ))
 View(receptivo)
 ```
+```{r}
+library(here)
+library(readxl)
+diccionario <- read_excel(here::here(
+  "Diccionario.xlsx"
+  ))
+
+View(Diccionario)
+
+```
 
