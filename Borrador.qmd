@@ -23,3 +23,18 @@ View(diccionario)
 
 ```
 
+# Introducción.
+
+# Preguntas de interés.
+ Distribución de gastos (por persona) según motivo de ingreso al país.
+ ¿Con que motivo ingresa al país según nacionalidad del grupo?
+ 
+ 
+
+# Análisis exploratorio de los datos.
+# Modelo predictivo.
+# Versión inicial de la shiny app.
+# Shiny app disponible en servido RStudio.
+
+
+
