@@ -19,7 +19,7 @@ diccionario <- read_excel(here::here(
   "Diccionario.xlsx"
   ))
 
-View(Diccionario)
+View(diccionario)
 
 ```
 
