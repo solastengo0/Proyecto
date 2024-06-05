@@ -28,7 +28,7 @@ View(diccionario)
 # Preguntas de interés.
  Distribución de gastos (por persona) según motivo de ingreso al país.
  ¿Con que motivo ingresa al país según nacionalidad del grupo?
- 
+ ¿Los gastos de las personas (por día) que ingresen al país en el futuro se comportaran igual dependiendo del motivo del ingreso?
  
 
 # Análisis exploratorio de los datos.
