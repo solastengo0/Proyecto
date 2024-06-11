@@ -1,0 +1,233 @@
+---
+title: "Borrador_Gabi"
+format: pdf
+---
+
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+library(here)
+library(readxl)
+receptivo <- read_excel(here::here(
+  "receptivo.xlsx"
+  ))
+View(receptivo)
+```
+
+```{r}
+library(here)
+library(readxl)
+diccionario <- read_excel(here::here(
+  "Diccionario.xlsx"
+  ))
+
+View(diccionario)
+```
+
+
+### Canitdad de observaciones por hoteles.
+```{r}
+receptivo |> 
+  group_by(Alojamiento) |> 
+  summarise(cant. = n()) |> 
+  print(n=22) |> 
+  arrange(desc(cant.)) |> 
+  filter(str_starts(string = Alojamiento, pattern = "Hotel"))
+```
+
+
+### Distribución de la RESIDENCIA de las personas que ingresaron.
+```{r}
+receptivo |> 
+  group_by(Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+
+```{r}
+# Top 10 residencias de los que ingresan.
+ggplot(
+  receptivo |> 
+  group_by(Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  slice_max(cant., n=10)
+) +
+  geom_col(aes(fct_inorder(Residencia), cant.)) +
+  coord_flip()
+```
+
+```{r}
+ggplot(receptivo) +
+  geom_bar(aes(fct_infreq(Residencia)))+
+  coord_flip()
+```
+
+
+
+### Distribución del MOTIVO de ingreso.
+
+```{r}
+receptivo |> 
+  group_by(Motivo) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+```{r}
+ggplot(receptivo) +
+  geom_bar(aes(fct_infreq(Motivo))) +
+  coord_flip()
+```
+
+### MOTIVO de ingreso según RESIDENCIA.
+
+```{r}
+receptivo |>
+  select(Motivo, Residencia) |> 
+  group_by(Motivo, Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(cant. >= 100 & Motivo != "Ocio y vacaciones") |> 
+  ggplot() +
+  geom_col(aes(
+    x = fct_infreq(Residencia),
+    y = cant.,
+    fill = Motivo
+  )) +
+  coord_flip()
+```
+
+### MOTIVO según NACIONALIDAD, sólo quienes ingresan desde américa.
+
+```{r}
+receptivo |>
+  select(Motivo, Pais, IdNacionalidad) |> 
+  group_by(Motivo, Pais, IdNacionalidad) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
+  ggplot() +
+  geom_col(aes(
+    x = fct_infreq(Pais),
+    y = cant.,
+    fill = Motivo
+  )) +
+  coord_flip()
+```
+
+### MOTIVO según NACIONALIDAD, sólo quienes ingresan desde afuera de américa.
+
+```{r}
+receptivo |>
+  select(Motivo, Pais, IdNacionalidad) |> 
+  group_by(Motivo, Pais, IdNacionalidad) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79)) |>
+  ggplot() +
+  geom_col(aes(
+    x = fct_infreq(Pais),
+    y = cant.,
+    fill = Motivo
+  )) +
+  coord_flip()
+```
+
+
+#### Nota:
+IdNacionalidad, de 50 para abajo es america (sur, central y norte) y 50 para arriba es Europa, Asia, Oceania (resto del mundo).
+
+```{r}
+receptivo |> 
+  select(IdNacionalidad, Pais) |> 
+  group_by(IdNacionalidad, Pais) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+
+```{r}
+receptivo |> 
+  select(Gente) |>
+  sum()
+```
+
+
+```{r}
+receptivo |>
+  select(Gente) |>
+  count()
+```
+#### Obs.: Más gente que observaciones
+NACIONALIDAD y RESIDENCIA la tomamos como la del grupo, o del que contesta la encuesta?
+
+
+## Cambio FECHA INGRESO/EGRESO por anio, aniomes.
+
+```{r}
+# Separo FechaIngreso en anio, mes y día:
+receptivo_fecha <-
+  receptivo |> 
+  separate(
+    col = FechaIngreso,
+    into = c("anio_I", "mes_I", "dia_I"),
+    convert = TRUE
+  )
+
+# Separo FechaEgreso en anio, mes y día:
+receptivo_fecha <- 
+  receptivo_fecha |> 
+  separate(
+    col = FechaEgreso,
+    into = c("anio_E", "mes_E", "dia_E"),
+    convert = TRUE
+  )
+
+# Creo Variable aniomes:
+receptivo_fecha <- 
+  receptivo_fecha |>
+  mutate(
+    aniomes_I = anio_I*100 + mes_I,
+    aniomes_E = anio_E*100 + mes_E,
+    .before = anio_I
+    )
+
+receptivo_fecha |> 
+  select(aniomes_I:IdFecEgr)
+```
+
+
+#### Nota: Detalle
+Creo que hay un error en la fecha de ingreso del 2011-12-27, porque su fecha de egreso es 8 años despues, 2019-01-10. Creo que en vez de 2011 es 2018, porque el Destino es costas oceanicas y la estadía marca 14 días.
+
+
+## Creo la variable Gasto por persona
+
+
+```{r}
+receptivo_fecha <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = starts_with("Gasto"),
+    .fns = ~ round((.x/Gente), 2),
+    .names = "{.col}_porPersona"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlimentacion, GastoAlimentacion_porPersona, GastoTransporte, GastoTransporte_porPersona, GastoCultural, GastoCultural_porPersona, GastoTours, GastoTours_porPersona, GastoCompras, GastoCompras_porPersona, GastoOtros, GastoOtros_porPersona, Coef:CoefTot)
+```
+
+
+```{r}
+receptivo_fecha |> head()
+```
+
+
+
+
+
+
+
+
+
