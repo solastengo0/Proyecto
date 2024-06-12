@@ -225,7 +225,7 @@ receptivo_fecha |> head()
 
 
 
-
+## Gasto por persona por Día!
 
 
 
