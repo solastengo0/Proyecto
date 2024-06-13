@@ -1,0 +1,359 @@
+---
+title: "Reporte"
+author: "Juan Cadenas, Sol Astengo, Gabriel Bermudez"
+format: pdf
+---
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+library(tidyverse)
+library(here)
+library(readxl)
+library(forcats)
+```
+# Introducción
+
+Uruguay se construyo bajo la base de la emigracion, y durante su historia el flujo de personas fue determinante a la hora de moldear la estructura de su sociedad. Pero mas alla de la poblacion residente, existe un alto porcentage de individuos que visita el pais por lapsos de tiempo mas reducidos y motivos diversos, pero que de igual manera inciden directamente en su  economia.
+
+para esto indagaremos sobre los datos ofrecidos por el sistema de datos abiertos, "Turismo Receptivo". Analizaremos puntualmente a que areas corresponden los gastos de los visitantes, sus distribuciones y de que maneras podemos llegar a explicarlos segun el perfil de quien ingresa.
+
+
+La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las que destacamos, nacionalidad del visitante, motivo de ingreso, duracion de la estadia, nivel de educacion, ocupacion y nacionalidad.
+
+
+
+# Objetivos
+
+Buscamos a partir de las variables anteriormente nombradas (explicativas), entender como influyen en el gasto, si es que lo hacen.
+Veremos como se comportan los gastos segun el motivo de visita al pais y si existe alguna relacion entre ellos. Tambien tendremos en cuenta a la hora de mirar la forma de estos gastos las nacionalidades correspondientes de los individuos.
+En conclusion nos centraremos en el gasto promedio por persona, individual y diario como nuestra variable de respuesta, y trataremos de explicarlo en funcion de las caracteristicas de los no residentes que gastan dentro de nuestra economia.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+receptivo <- read_excel(here("data", "receptivo.xlsx"))
+diccionario <- read_excel(here("data", "Diccionario.xlsx"))
+
+View(receptivo)
+View(diccionario)
+```
+
+
+# Análisis Exploratorio de Datos
+
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+ggplot(receptivo) +
+  geom_bar(aes(x = fct_rev(fct_infreq(Motivo)), fill = Motivo)) +
+  coord_flip()+
+  labs(x = "Motivo", y = "Cantidad", title = "Distribucion del motivo de ingreso")
+```
+
+
+En un primer paneo podemos apreciar que la gran mayoria de las personas que ingresan al pais lo hacen exclusivamente por motivos recreativos y/o de indole social.
+
+
+Muchas de las observaciones corresponden a un grupo de varios individuos. Trabajamos bajo el supuesto de que todos los integrantes del grupo comparten nacionalidad asi como los gastos refieren a la suma de los gastos de todo el grupo.
+
+
+
+
+
+## Distribucion de las nacionalidades de los visitantes
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+receptivo |> 
+  select(IdNacionalidad, Pais) |> 
+  group_by(IdNacionalidad, Pais) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+
+Suponemos que gran parte de los uruguayos que vuelven a pasar unos dias es con propositos sociales, pero y el alto porcentaje de Argentinos? Brasileros? a que vienen?
+El siguiente grafico nos muestra los motivos de visita para las personas con nacionalidades Sudamericanas.
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+receptivo |>
+  select(Motivo, Pais, IdNacionalidad) |> 
+  group_by(Motivo, Pais, IdNacionalidad) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
+  ggplot() +
+  geom_col(aes(
+    x = fct_infreq(Pais),
+    y = cant.,
+    fill = Motivo
+  )) +
+  coord_flip()
+```
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Cantidad de observaciones por hoteles
+
+receptivo |> 
+  group_by(Alojamiento) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(str_starts(string = Alojamiento, pattern = "Hotel")) |> 
+  print(n = 22)
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Distribución de la RESIDENCIA de las personas que ingresaron.
+
+receptivo |> 
+  group_by(Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+### Gráfica de las 10 principales residencias
+
+ggplot(
+  receptivo |> 
+  group_by(Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  slice_max(cant., n=10)
+) +
+  geom_col(aes(fct_inorder(Residencia), cant.)) +
+  coord_flip()
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+ 
+### Gráfica de la distribución de residencia
+
+ggplot(receptivo) +
+  geom_bar(aes(fct_infreq(Residencia))) +
+  coord_flip()
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Distribución del MOTIVO de ingreso
+
+receptivo |> 
+  group_by(Motivo) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## MOTIVO de ingreso según RESIDENCIA
+
+receptivo |>
+  select(Motivo, Residencia) |> 
+  group_by(Motivo, Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(cant. >= 100 & Motivo != "Ocio y vacaciones") |> 
+  ggplot() +
+  geom_col(aes(
+    x = fct_infreq(Residencia),
+    y = cant.,
+    fill = Motivo
+  )) +
+  coord_flip()
+```
+
+
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## MOTIVO según NACIONALIDAD, sólo quienes ingresan desde afuera de américa
+
+receptivo |>
+  select(Motivo, Pais, IdNacionalidad) |> 
+  group_by(Motivo, Pais, IdNacionalidad) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79)) |>
+  ggplot() +
+  geom_col(aes(
+    x = fct_infreq(Pais),
+    y = cant.,
+    fill = Motivo
+  )) +
+  coord_flip()
+```
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+### Número total de personas
+
+receptivo |> 
+  select(Gente) |>
+  sum()
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+#### Nota:
+
+# IdNacionalidad, de 50 para abajo es america (sur, central y norte) y 50 para arriba es Europa, Asia, Oceania (resto del mundo).
+```
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Cambio de fecha de ingreso/egreso por año y mes
+
+# Separo FechaIngreso en anio, mes y día:
+
+receptivo_fecha <-
+  receptivo |> 
+  separate(
+    col = FechaIngreso,
+    into = c("anio_I", "mes_I", "dia_I"),
+    convert = TRUE
+  )
+
+# Separo FechaEgreso en anio, mes y día:
+receptivo_fecha <- 
+  receptivo_fecha |> 
+  separate(
+    col = FechaEgreso,
+    into = c("anio_E", "mes_E", "dia_E"),
+    convert = TRUE
+  )
+
+# Creo Variable aniomes:
+receptivo_fecha <- 
+  receptivo_fecha |>
+  mutate(
+    aniomes_I = anio_I*100 + mes_I,
+    aniomes_E = anio_E*100 + mes_E,
+    .before = anio_I
+    )
+
+receptivo_fecha |> 
+  select(aniomes_I:IdFecEgr)
+```
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Cálculo de los gastos por persona
+
+receptivo_fecha <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = starts_with("Gasto"),
+    .fns = ~ round((.x/Gente), 2),
+    .names = "{.col}_porPersona"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlimentacion, GastoAlimentacion_porPersona, GastoTransporte, GastoTransporte_porPersona, GastoCultural, GastoCultural_porPersona, GastoTours, GastoTours_porPersona, GastoCompras, GastoCompras_porPersona, GastoOtros, GastoOtros_porPersona, Coef:CoefTot)
+```
+
+Agregamos a nuestros datos las columnas corresponientes a los gastos por persona para facilitar calculos posteriores.
+(almacenamos los cambios en "receptivo_fecha")
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+receptivo_fecha[50:60, 57:62]
+```
+
+
+
+### Nota sobre fechas:
+
+Se identificó un posible error en la fecha de ingreso del 2011-12-27, con una fecha de egreso 8 años después. Se supone que en vez de 2011, debería ser 2018.
