@@ -3,122 +3,100 @@ title: "Reporte"
 author: "Juan Cadenas, Sol Astengo, Gabriel Bermudez"
 format: pdf
 ---
-
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
 library(tidyverse)
 library(here)
 library(readxl)
+library(forcats)
 ```
-
 # Introducción
 
-En este proyecto, analizamos una base de datos de ingresos y egresos de personas al país. Nuestro objetivo es responder varias preguntas específicas relacionadas con los motivos de ingreso, nacionalidades, y gastos de los individuos. 
-Este reporte incluye un análisis exploratorio inicial de los datos.
+Uruguay se construyo bajo la base de la emigracion, y durante su historia el flujo de personas fue determinante a la hora de moldear la estructura de su sociedad. Pero mas alla de la poblacion residente, existe un alto porcentage de individuos que visita el pais por lapsos de tiempo mas reducidos y motivos diversos, pero que de igual manera inciden directamente en su  economia.
 
-# Preguntas planteadas
-- Distribución de gastos (por persona) según motivo de ingreso al país.
- 
-- ¿Con que motivo ingresa al país según nacionalidad del grupo?.
+para esto indagaremos sobre los datos ofrecidos por el sistema de datos abiertos, "Turismo Receptivo". Analizaremos puntualmente a que areas corresponden los gastos de los visitantes, sus distribuciones y de que maneras podemos llegar a explicarlos segun el perfil de quien ingresa.
 
-- De qué nacionalidades son las personas que ingresan al país (mapa).
 
-- Gasto promedio diario por persona segun motivo, nivel educativo, transporte por el que ingresa al país.
-     - Variable de respuesta: Gasto promedio diario (por persona).
-     - Variables explicativas: motivo, nivel educativo, transporte por el que ingresa al país.
+La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las que destacamos, nacionalidad del visitante, motivo de ingreso, duracion de la estadia, nivel de educacion, ocupacion y nacionalidad.
 
-# Datos
+
+
+# Objetivos
+
+Buscamos a partir de las variables anteriormente nombradas (explicativas), entender como influyen en el gasto, si es que lo hacen.
+Veremos como se comportan los gastos segun el motivo de visita al pais y si existe alguna relacion entre ellos. Tambien tendremos en cuenta a la hora de mirar la forma de estos gastos las nacionalidades correspondientes de los individuos.
+En conclusion nos centraremos en el gasto promedio por persona, individual y diario como nuestra variable de respuesta, y trataremos de explicarlo en funcion de las caracteristicas de los no residentes que gastan dentro de nuestra economia.
+
 
 ```{r}
-receptivo <- read_excel(here::here("receptivo.xlsx"))
-diccionario <- read_excel(here::here("Diccionario.xlsx"))
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
 
-# Mostrar una vista preliminar de los datos
+receptivo <- read_excel(here("data", "receptivo.xlsx"))
+diccionario <- read_excel(here("data", "Diccionario.xlsx"))
+
 View(receptivo)
 View(diccionario)
 ```
 
+
 # Análisis Exploratorio de Datos
 
-## Cantidad de observaciones por hoteles
+
+
+
 
 ```{r}
-receptivo |> 
-  group_by(Alojamiento) |> 
-  summarise(cant. = n()) |> 
-  arrange(desc(cant.)) |> 
-  filter(str_starts(string = Alojamiento, pattern = "Hotel")) |> 
-  print(n = 22)
+#| echo: false
+#| message: false
+#| warning: false
+
+ggplot(receptivo) +
+  geom_bar(aes(x = fct_rev(fct_infreq(Motivo)), fill = Motivo)) +
+  coord_flip()+
+  labs(x = "Motivo", y = "Cantidad", title = "Distribucion del motivo de ingreso")
 ```
 
-## Distribución de la RESIDENCIA de las personas que ingresaron.
+
+En un primer paneo podemos apreciar que la gran mayoria de las personas que ingresan al pais lo hacen exclusivamente por motivos recreativos y/o de indole social.
+
+
+Muchas de las observaciones corresponden a un grupo de varios individuos. Trabajamos bajo el supuesto de que todos los integrantes del grupo comparten nacionalidad asi como los gastos refieren a la suma de los gastos de todo el grupo.
+
+
+
+
+
+## Distribucion de las nacionalidades de los visitantes
+
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
 receptivo |> 
-  group_by(Residencia) |> 
+  select(IdNacionalidad, Pais) |> 
+  group_by(IdNacionalidad, Pais) |> 
   summarise(cant. = n()) |> 
   arrange(desc(cant.))
 ```
 
-### Gráfica de las 10 principales residencias
+Suponemos que gran parte de los uruguayos que vuelven a pasar unos dias es con propositos sociales, pero y el alto porcentaje de Argentinos? Brasileros? a que vienen?
+El siguiente grafico nos muestra los motivos de visita para las personas con nacionalidades Sudamericanas.
+
 
 ```{r}
-ggplot(
-  receptivo |> 
-  group_by(Residencia) |> 
-  summarise(cant. = n()) |> 
-  arrange(desc(cant.)) |> 
-  slice_max(cant., n=10)
-) +
-  geom_col(aes(fct_inorder(Residencia), cant.)) +
-  coord_flip()
-```
+#| echo: false
+#| message: false
+#| warning: false
 
-### Gráfica de la distribución de residencia
-
-```{r}
-ggplot(receptivo) +
-  geom_bar(aes(fct_infreq(Residencia))) +
-  coord_flip()
-```
-
-## Distribución del MOTIVO de ingreso
-
-```{r}
-receptivo |> 
-  group_by(Motivo) |> 
-  summarise(cant. = n()) |> 
-  arrange(desc(cant.))
-```
-
-### Gráfica de la distribución del motivo de ingreso
-
-```{r}
-ggplot(receptivo) +
-  geom_bar(aes(fct_infreq(Motivo))) +
-  coord_flip()
-```
-
-## MOTIVO de ingreso según RESIDENCIA
-
-```{r}
-receptivo |>
-  select(Motivo, Residencia) |> 
-  group_by(Motivo, Residencia) |> 
-  summarise(cant. = n()) |> 
-  arrange(desc(cant.)) |> 
-  filter(cant. >= 100 & Motivo != "Ocio y vacaciones") |> 
-  ggplot() +
-  geom_col(aes(
-    x = fct_infreq(Residencia),
-    y = cant.,
-    fill = Motivo
-  )) +
-  coord_flip()
-```
-
-## MOTIVO según NACIONALIDAD, sólo quienes ingresan desde américa
-
-```{r}
 receptivo |>
   select(Motivo, Pais, IdNacionalidad) |> 
   group_by(Motivo, Pais, IdNacionalidad) |> 
@@ -134,9 +112,133 @@ receptivo |>
   coord_flip()
 ```
 
-## MOTIVO según NACIONALIDAD, sólo quienes ingresan desde afuera de américa
+
+
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Cantidad de observaciones por hoteles
+
+receptivo |> 
+  group_by(Alojamiento) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(str_starts(string = Alojamiento, pattern = "Hotel")) |> 
+  print(n = 22)
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Distribución de la RESIDENCIA de las personas que ingresaron.
+
+receptivo |> 
+  group_by(Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+### Gráfica de las 10 principales residencias
+
+ggplot(
+  receptivo |> 
+  group_by(Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  slice_max(cant., n=10)
+) +
+  geom_col(aes(fct_inorder(Residencia), cant.)) +
+  coord_flip()
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+ 
+### Gráfica de la distribución de residencia
+
+ggplot(receptivo) +
+  geom_bar(aes(fct_infreq(Residencia))) +
+  coord_flip()
+```
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## Distribución del MOTIVO de ingreso
+
+receptivo |> 
+  group_by(Motivo) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.))
+```
+
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## MOTIVO de ingreso según RESIDENCIA
+
+receptivo |>
+  select(Motivo, Residencia) |> 
+  group_by(Motivo, Residencia) |> 
+  summarise(cant. = n()) |> 
+  arrange(desc(cant.)) |> 
+  filter(cant. >= 100 & Motivo != "Ocio y vacaciones") |> 
+  ggplot() +
+  geom_col(aes(
+    x = fct_infreq(Residencia),
+    y = cant.,
+    fill = Motivo
+  )) +
+  coord_flip()
+```
+
+
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+## MOTIVO según NACIONALIDAD, sólo quienes ingresan desde afuera de américa
+
 receptivo |>
   select(Motivo, Pais, IdNacionalidad) |> 
   group_by(Motivo, Pais, IdNacionalidad) |> 
@@ -152,50 +254,44 @@ receptivo |>
   coord_flip()
 ```
 
-## Nacionalidades de las personas que ingresan al país
 
 ```{r}
-receptivo |> 
-  select(IdNacionalidad, Pais) |> 
-  group_by(IdNacionalidad, Pais) |> 
-  summarise(cant. = n()) |> 
-  arrange(desc(cant.))
-```
-
-#### Nota:
-
-IdNacionalidad, de 50 para abajo es america (sur, central y norte) y 50 para arriba es Europa, Asia, Oceania (resto del mundo).
-
-```{r}
-receptivo |> 
-  select(IdNacionalidad, Pais) |> 
-  group_by(IdNacionalidad, Pais) |> 
-  summarise(cant. = n()) |> 
-  arrange(desc(cant.))
-```
-
-#### Obs.: Más gente que observaciones
-
-NACIONALIDAD y RESIDENCIA la tomamos como la del grupo, o del que contesta la encuesta?
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
 
 ### Número total de personas
 
-```{r}
 receptivo |> 
   select(Gente) |>
   sum()
 ```
 
 ```{r}
-receptivo |>
-  select(Gente) |>
-  count()
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+#### Nota:
+
+# IdNacionalidad, de 50 para abajo es america (sur, central y norte) y 50 para arriba es Europa, Asia, Oceania (resto del mundo).
 ```
+
+
+
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
 
 ## Cambio de fecha de ingreso/egreso por año y mes
 
-```{r}
 # Separo FechaIngreso en anio, mes y día:
+
 receptivo_fecha <-
   receptivo |> 
   separate(
@@ -226,12 +322,15 @@ receptivo_fecha |>
   select(aniomes_I:IdFecEgr)
 ```
 
-### Nota sobre fechas:
 
-Se identificó un posible error en la fecha de ingreso del 2011-12-27, con una fecha de egreso 8 años después. Se supone que en vez de 2011, debería ser 2018.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
 
 ## Cálculo de los gastos por persona
-```{r}
+
 receptivo_fecha <- 
 receptivo_fecha |> 
   mutate(across(
@@ -242,7 +341,19 @@ receptivo_fecha |>
   relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlimentacion, GastoAlimentacion_porPersona, GastoTransporte, GastoTransporte_porPersona, GastoCultural, GastoCultural_porPersona, GastoTours, GastoTours_porPersona, GastoCompras, GastoCompras_porPersona, GastoOtros, GastoOtros_porPersona, Coef:CoefTot)
 ```
 
+Agregamos a nuestros datos las columnas corresponientes a los gastos por persona para facilitar calculos posteriores.
+(almacenamos los cambios en "receptivo_fecha")
 
 ```{r}
-receptivo_fecha |> head()
+#| echo: false
+#| message: false
+#| warning: false
+
+receptivo_fecha[50:60, 57:62]
 ```
+
+
+
+### Nota sobre fechas:
+
+Se identificó un posible error en la fecha de ingreso del 2011-12-27, con una fecha de egreso 8 años después. Se supone que en vez de 2011, debería ser 2018.
