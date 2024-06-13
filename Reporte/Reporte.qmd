@@ -16,12 +16,11 @@ library(forcats)
 ```
 # Introducción
 
-Uruguay se construyo bajo la base de la emigracion, y durante su historia el flujo de personas fue determinante a la hora de moldear la estructura de su sociedad. Pero mas alla de la poblacion residente, existe un alto porcentage de individuos que visita el pais por lapsos de tiempo mas reducidos y motivos diversos, pero que de igual manera inciden directamente en su  economia.
+Uruguay se construyo bajo la base de la emigracion, y durante su historia el flujo de personas fue determinante a la hora de moldear la estructura de su sociedad. Pero mas alla de la poblacion residente, existe un alto porcentaje de individuos que visita el pais por lapsos de tiempo mas reducidos y motivos diversos, pero que de igual manera inciden directamente en su  economia.
 
 para esto indagaremos sobre los datos ofrecidos por el sistema de datos abiertos, "Turismo Receptivo". Analizaremos puntualmente a que areas corresponden los gastos de los visitantes, sus distribuciones y de que maneras podemos llegar a explicarlos segun el perfil de quien ingresa.
 
-
-La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las que destacamos, nacionalidad del visitante, motivo de ingreso, duracion de la estadia, nivel de educacion, ocupacion y nacionalidad.
+La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las que destacamos, nacionalidad del visitante, motivo de ingreso, duracion de la estadia, nivel de educacion y ocupación.
 
 
 
@@ -29,7 +28,7 @@ La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las 
 
 Buscamos a partir de las variables anteriormente nombradas (explicativas), entender como influyen en el gasto, si es que lo hacen.
 Veremos como se comportan los gastos segun el motivo de visita al pais y si existe alguna relacion entre ellos. Tambien tendremos en cuenta a la hora de mirar la forma de estos gastos las nacionalidades correspondientes de los individuos.
-En conclusion nos centraremos en el gasto promedio por persona, individual y diario como nuestra variable de respuesta, y trataremos de explicarlo en funcion de las caracteristicas de los no residentes que gastan dentro de nuestra economia.
+En conclusion nos centraremos en el gasto promedio por persona, individual y diario como nuestra variable de respuesta, y trataremos de explicarlo en funcion de las caracteristicas de los no residentes que consumen dentro de nuestra economia.
 
 
 ```{r}
@@ -37,6 +36,11 @@ En conclusion nos centraremos en el gasto promedio por persona, individual y dia
 #| message: false
 #| warning: false
 #| include: false
+
+library(tidyverse)
+library(ggplot2)
+library(xtable)
+library(here)
 
 receptivo <- read_excel(here("data", "receptivo.xlsx"))
 diccionario <- read_excel(here("data", "Diccionario.xlsx"))
@@ -47,10 +51,6 @@ View(diccionario)
 
 
 # Análisis Exploratorio de Datos
-
-
-
-
 
 ```{r}
 #| echo: false
@@ -86,10 +86,11 @@ receptivo |>
   group_by(IdNacionalidad, Pais) |> 
   summarise(cant. = n()) |> 
   arrange(desc(cant.))
+
 ```
 
 Suponemos que gran parte de los uruguayos que vuelven a pasar unos dias es con propositos sociales, pero y el alto porcentaje de Argentinos? Brasileros? a que vienen?
-El siguiente grafico nos muestra los motivos de visita para las personas con nacionalidades Sudamericanas.
+El siguiente grafico nos muestra los motivos de visita para las personas con nacionalidades Americanas.
 
 
 ```{r}
@@ -109,7 +110,8 @@ receptivo |>
     y = cant.,
     fill = Motivo
   )) +
-  coord_flip()
+  coord_flip() +
+  labs(x = "Nacionalidad", y = " ", title = "Distribución de motivos de visita según nacionalidad.")
 ```
 
 
@@ -279,6 +281,21 @@ receptivo |>
 # IdNacionalidad, de 50 para abajo es america (sur, central y norte) y 50 para arriba es Europa, Asia, Oceania (resto del mundo).
 ```
 
+### Nota sobre fechas
+
+Se identificó un posible error en la fecha de ingreso del 2011-12-27, con una fecha de egreso 8 años después. Se supone que en vez de 2011, debería ser 2018, ya que la duración de estadía es de 14 días. Por lo tanto, la fecha de ingreso se ha corregido de 2011-12-27 a 2018-12-27 para reflejar correctamente la duración de la estadía.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| include: false
+
+receptivo <- receptivo %>%
+  mutate(FechaIngreso = if_else(FechaIngreso == as.Date("2011-12-27") & FechaEgreso == as.Date("2019-01-10"), 
+                                as.Date("2018-12-27"), 
+                                FechaIngreso))
+```
 
 
 
@@ -341,6 +358,11 @@ receptivo_fecha |>
   relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlimentacion, GastoAlimentacion_porPersona, GastoTransporte, GastoTransporte_porPersona, GastoCultural, GastoCultural_porPersona, GastoTours, GastoTours_porPersona, GastoCompras, GastoCompras_porPersona, GastoOtros, GastoOtros_porPersona, Coef:CoefTot)
 ```
 
+
+
+
+### Incorporación de variables gastos por persona.
+
 Agregamos a nuestros datos las columnas corresponientes a los gastos por persona para facilitar calculos posteriores.
 (almacenamos los cambios en "receptivo_fecha")
 
@@ -352,8 +374,3 @@ Agregamos a nuestros datos las columnas corresponientes a los gastos por persona
 receptivo_fecha[50:60, 57:62]
 ```
 
-
-
-### Nota sobre fechas:
-
-Se identificó un posible error en la fecha de ingreso del 2011-12-27, con una fecha de egreso 8 años después. Se supone que en vez de 2011, debería ser 2018.
