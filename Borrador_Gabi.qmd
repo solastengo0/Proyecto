@@ -227,7 +227,15 @@ receptivo_fecha |> head()
 
 ## Gasto por persona por Día!
 
+```{r}
 
 
 
+kable
+install.packages("kableExtra")
 
+gt
+install.packages("gt")
+library(gt)
+
+```
