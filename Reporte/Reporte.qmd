@@ -42,6 +42,7 @@ library(tidyverse)
 library(ggplot2)
 library(xtable)
 library(here)
+library(stringr)
 
 receptivo <- read_excel(here("data", "receptivo.xlsx"))
 diccionario <- read_excel(here("data", "Diccionario.xlsx"))
@@ -82,13 +83,12 @@ Muchas de las observaciones corresponden a un grupo de varios individuos. Trabaj
 #| message: false
 #| warning: false
 
-dist <- receptivo |> 
+receptivo |> 
   select(IdNacionalidad, Pais) |> 
   group_by(IdNacionalidad, Pais) |> 
   summarise(cant. = n()) |> 
-  arrange(desc(cant.)) 
-
-##gt(dist, rowname_col = c("idNacionalidad", "Pais" , "cant."))
+  arrange(desc(cant.)) |> 
+  gt()
 
 ```
 
@@ -133,7 +133,8 @@ receptivo |>
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |> 
   filter(str_starts(string = Alojamiento, pattern = "Hotel")) |> 
-  print(n = 22)
+  print(n = 22) |>
+  gt()
 ```
 
 
@@ -149,7 +150,8 @@ receptivo |>
 receptivo |> 
   group_by(Residencia) |> 
   summarise(cant. = n()) |> 
-  arrange(desc(cant.))
+  arrange(desc(cant.)) |>
+  gt()
 ```
 
 
@@ -201,7 +203,8 @@ ggplot(receptivo) +
 receptivo |> 
   group_by(Motivo) |> 
   summarise(cant. = n()) |> 
-  arrange(desc(cant.))
+  arrange(desc(cant.)) |>
+  gt()
 ```
 
 
@@ -374,6 +377,7 @@ Agregamos a nuestros datos las columnas corresponientes a los gastos por persona
 #| message: false
 #| warning: false
 
-receptivo_fecha[50:60, 57:62]
+receptivo_fecha[50:60, 57:62]  |>
+  gt()
 ```
 
