@@ -227,7 +227,41 @@ receptivo_fecha |> head()
 
 ## Gasto por persona por Día!
 
+```{r}
+receptivo_fecha <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = ends_with("_porPersona"),
+    .fns = ~ round((.x/Estadia), 2),
+    .names = "{.col}_Dia"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoTotal_porPersona_Dia, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlojamiento_porPersona_Dia, GastoAlimentacion, GastoAlimentacion_porPersona, GastoAlimentacion_porPersona_Dia, GastoTransporte, GastoTransporte_porPersona, GastoTransporte_porPersona_Dia, GastoCultural, GastoCultural_porPersona, GastoCultural_porPersona_Dia, GastoTours, GastoTours_porPersona, GastoTours_porPersona_Dia, GastoCompras, GastoCompras_porPersona, GastoCompras_porPersona_Dia, GastoOtros, GastoOtros_porPersona, GastoOtros_porPersona_Dia, Coef:CoefTot)
+```
+
+```{r}
+receptivo_fecha |> select(!(IdIngresos:Destino))
+```
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+receptivo_fecha |> group_by(Gente) |> summarise(cant. = n())
+```
+
+
+```{r}
+receptivo_fecha |> filter(Gente > 10) |> arrange(desc(GastoTotal))
+```
 
 
