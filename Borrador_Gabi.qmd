@@ -228,6 +228,7 @@ receptivo_fecha |> head()
 ## Gasto por persona por Día!
 
 ```{r}
+<<<<<<< HEAD
 receptivo_fecha <- 
 receptivo_fecha |> 
   mutate(across(
@@ -241,10 +242,15 @@ receptivo_fecha |>
 ```{r}
 receptivo_fecha |> select(!(IdIngresos:Destino))
 ```
+=======
+>>>>>>> b3262610ae8097d3f811b1873fc6659775014b99
 
 
 
+kable
+install.packages("kableExtra")
 
+<<<<<<< HEAD
 
 
 
@@ -265,3 +271,10 @@ receptivo_fecha |> filter(Gente > 10) |> arrange(desc(GastoTotal))
 ```
 
 
+=======
+gt
+install.packages("gt")
+library(gt)
+
+```
+>>>>>>> b3262610ae8097d3f811b1873fc6659775014b99
