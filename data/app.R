@@ -30,17 +30,23 @@ server <- function(input, output) {
       select(Motivo, all_of(columnas_gasto))
     
     datos_gathered <- datos_filtrados %>%
-      gather(key = "TipoGasto", value = "Gasto", -Motivo)
+      gather(key = "TipoGasto", value = "Gasto", -Motivo) %>% 
+      mutate(TipoGasto = case_match(
+        TipoGasto,
+        "GastoAlojamiento_porPersona" ~ "Gasto en Alojamiento",
+        "GastoAlimentacion_porPersona" ~ "Gasto en Alimentacion",
+        "GastoTransporte_porPersona" ~ "Gasto en Transporte", 
+        "GastoCultural_porPersona" ~ "Gasto Cultural", 
+        "GastoTours_porPersona" ~ "Gasto en Tours", 
+        "GastoCompras_porPersona" ~ "Gasto en Compras", 
+        "GastoOtros_porPersona" ~ "Otros Gastos"
+      ))
     
     ggplot(data = datos_gathered, aes(x = reorder(TipoGasto, Gasto), y = Gasto, fill = TipoGasto)) +
       geom_bar(stat = "identity") +
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
-           title = paste("Gastos por Persona para el Motivo:", input$motivo),
-           legend = "Gasto en Alojamiento", "Gasto en Alimentación", 
-                      "Gasto en Transporte", "Gasto en Cultural", 
-                      "Gasto en Tours", "Gasto en Compras", 
-                      "Otros Gastos") +
+           title = paste("Gastos por Persona para el Motivo:", input$motivo)) +
       theme(axis.text.x = element_blank())
       
   })
