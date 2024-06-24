@@ -227,6 +227,7 @@ receptivo_fecha |> head()
 
 ## Gasto por persona por Día!
 
+
 ```{r}
 receptivo_fecha_dia <- 
 receptivo_fecha |> 
@@ -299,6 +300,7 @@ ggplot( ) + geom_point(aes(x=fitted(m2), y=rstudent(m2) )) +
  x=expression( hat(y[i])) , y = expression(e[i]/SE(e[i])) ) +
  theme(aspect.ratio = 1)
 ```
+
 
 
 

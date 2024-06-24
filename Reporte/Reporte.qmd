@@ -13,7 +13,6 @@ library(tidyverse)
 library(here)
 library(readxl)
 library(forcats)
-library(gt)
 ```
 # Introducción
 
@@ -27,9 +26,9 @@ La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las 
 
 # Objetivos
 
-Buscamos a partir de las variables anteriormente nombradas, entender como influyen en el gasto, si es que lo hacen.
+Buscamos a partir de las variables anteriormente nombradas (explicativas), entender como influyen en el gasto, si es que lo hacen.
 Veremos como se comportan los gastos segun el motivo de visita al pais y si existe alguna relacion entre ellos. Tambien tendremos en cuenta a la hora de mirar la forma de estos gastos las nacionalidades correspondientes de los individuos.
-En conclusion nos centraremos en el gasto como nuestra variable de respuesta, y trataremos de explicarlo en funcion de las caracteristicas de los no residentes que consumen dentro de nuestra economia.
+En conclusion nos centraremos en el gasto promedio por persona, individual y diario como nuestra variable de respuesta, y trataremos de explicarlo en funcion de las caracteristicas de los no residentes que consumen dentro de nuestra economia.
 
 
 ```{r}
@@ -42,7 +41,6 @@ library(tidyverse)
 library(ggplot2)
 library(xtable)
 library(here)
-library(stringr)
 
 receptivo <- read_excel(here("data", "receptivo.xlsx"))
 diccionario <- read_excel(here("data", "Diccionario.xlsx"))
@@ -87,8 +85,7 @@ receptivo |>
   select(IdNacionalidad, Pais) |> 
   group_by(IdNacionalidad, Pais) |> 
   summarise(cant. = n()) |> 
-  arrange(desc(cant.)) |> 
-  gt()
+  arrange(desc(cant.))
 
 ```
 
@@ -133,8 +130,7 @@ receptivo |>
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |> 
   filter(str_starts(string = Alojamiento, pattern = "Hotel")) |> 
-  print(n = 22) |>
-  gt()
+  print(n = 22)
 ```
 
 
@@ -150,8 +146,7 @@ receptivo |>
 receptivo |> 
   group_by(Residencia) |> 
   summarise(cant. = n()) |> 
-  arrange(desc(cant.)) |>
-  gt()
+  arrange(desc(cant.))
 ```
 
 
@@ -203,8 +198,7 @@ ggplot(receptivo) +
 receptivo |> 
   group_by(Motivo) |> 
   summarise(cant. = n()) |> 
-  arrange(desc(cant.)) |>
-  gt()
+  arrange(desc(cant.))
 ```
 
 
@@ -377,7 +371,6 @@ Agregamos a nuestros datos las columnas corresponientes a los gastos por persona
 #| message: false
 #| warning: false
 
-receptivo_fecha[50:60, 57:62]  |>
-  gt()
+receptivo_fecha[50:60, 57:62]
 ```
 

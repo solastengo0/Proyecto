@@ -10,11 +10,6 @@ columnas_gasto <- c("GastoAlojamiento_porPersona", "GastoAlimentacion_porPersona
                     "GastoTours_porPersona", "GastoCompras_porPersona", 
                     "GastoOtros_porPersona")
 
-nombres_descriptivos <- c("Gasto en Alojamiento", "Gasto en Alimentación", 
-                          "Gasto en Transporte", "Gasto en Cultural", 
-                          "Gasto en Tours", "Gasto en Compras", 
-                          "Otros Gastos")
-
 ui <- fluidPage(
   titlePanel("Gastos por Persona según Motivo"),
   sidebarLayout(
@@ -39,13 +34,15 @@ server <- function(input, output) {
     
     ggplot(data = datos_gathered, aes(x = reorder(TipoGasto, Gasto), y = Gasto, fill = TipoGasto)) +
       geom_bar(stat = "identity") +
-      scale_fill_manual(values = palette()[1:length(nombres_descriptivos)], 
-                        labels = setNames(nombres_descriptivos, nombres_descriptivos)) +
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
-           title = paste("Gastos por Persona para el Motivo:", input$motivo)) +
-      scale_x_discrete(labels = nombres_descriptivos) +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+           title = paste("Gastos por Persona para el Motivo:", input$motivo),
+           legend = "Gasto en Alojamiento", "Gasto en Alimentación", 
+                      "Gasto en Transporte", "Gasto en Cultural", 
+                      "Gasto en Tours", "Gasto en Compras", 
+                      "Otros Gastos") +
+      theme(axis.text.x = element_blank())
+      
   })
 }
 
