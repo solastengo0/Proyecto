@@ -303,6 +303,55 @@ ggplot( ) + geom_point(aes(x=fitted(m2), y=rstudent(m2) )) +
 
 
 
+```{r}
+receptivo_fecha_dia %>% 
+  
+```
+
+
+```{r}
+receptivo_fecha_dia %>% head()
+```
+
+
+```{r}
+subdatos <- receptivo_fecha_dia %>% 
+  select(Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente, GastoTotal:GastoOtros_porPersona_Dia
+)
+```
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(randomForest)
+library(modelr)
+#separo training y test
+intrain <- sample(
+  x = 1:nrow(subdatos), 
+  size = nrow(subdatos)*.7)
+
+training <- subdatos[intrain,]
+
+testing <- subdatos[-intrain,]
+# ajustamos modelo lineal simple
+rf <- randomForest(GastoTotal_porPersona_Dia~ .,data= training, na.action=na.omit)
+#raiz cuadrada del error cuadr´atico medio
+rmse(rf, testing)
+## [1] 3.370582
+```
+
+```{r}
+library(ranger)
+```
+
+
+
+
+
+
+
+
 
 
 
