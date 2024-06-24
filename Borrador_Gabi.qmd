@@ -13,7 +13,7 @@ library(tidyverse)
 library(here)
 library(readxl)
 receptivo <- read_excel(here::here(
-  "receptivo.xlsx"
+  "data/receptivo.xlsx"
   ))
 View(receptivo)
 ```
@@ -226,6 +226,81 @@ receptivo_fecha |> head()
 
 
 ## Gasto por persona por Día!
+
+
+```{r}
+receptivo_fecha_dia <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = ends_with("_porPersona"),
+    .fns = ~ round((.x/Estadia), 2),
+    .names = "{.col}_Dia"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoTotal_porPersona_Dia, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlojamiento_porPersona_Dia, GastoAlimentacion, GastoAlimentacion_porPersona, GastoAlimentacion_porPersona_Dia, GastoTransporte, GastoTransporte_porPersona, GastoTransporte_porPersona_Dia, GastoCultural, GastoCultural_porPersona, GastoCultural_porPersona_Dia, GastoTours, GastoTours_porPersona, GastoTours_porPersona_Dia, GastoCompras, GastoCompras_porPersona, GastoCompras_porPersona_Dia, GastoOtros, GastoOtros_porPersona, GastoOtros_porPersona_Dia, Coef:CoefTot)
+```
+
+```{r}
+receptivo_fecha_dia |> select(!(IdIngresos:Destino))
+```
+
+
+kable
+install.packages("kableExtra")
+
+
+
+
+```{r}
+receptivo_fecha |> group_by(Gente) |> summarise(cant. = n())
+```
+
+
+```{r}
+receptivo_fecha |> filter(Gente > 10) |> arrange(desc(GastoTotal))
+```
+
+
+gt
+install.packages("gt")
+library(gt)
+
+
+```{r}
+install.packages(randomForest)
+library(randomForest)
+```
+
+
+```{r}
+ggplot(receptivo_fecha_dia) + 
+  geom_point(aes(
+    x = GastoAlojamiento_porPersona_Dia,
+    y = GastoTransporte_porPersona_Dia,
+    color = Estadia
+  ))
+```
+
+
+
+```{r}
+m2 <- lm(GastoTotal_porPersona_Dia ~ Estadia + GastoAlojamiento_porPersona_Dia + GastoTransporte_porPersona_Dia, data= receptivo_fecha_dia)
+summary(m2)
+```
+
+```{r}
+dd <- data.frame(R2 = summary(m2)$r.squared, sigma=summary(m2)$sigma, AIC=AIC(m2))
+
+kable(dd)
+```
+
+
+```{r}
+ggplot( ) + geom_point(aes(x=fitted(m2), y=rstudent(m2) )) +
+ labs(title='Residuos vs Predicciones',
+ x=expression( hat(y[i])) , y = expression(e[i]/SE(e[i])) ) +
+ theme(aspect.ratio = 1)
+```
+
 
 
 
