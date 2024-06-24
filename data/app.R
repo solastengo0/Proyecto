@@ -11,18 +11,30 @@ columnas_gasto <- c("GastoAlojamiento_porPersona", "GastoAlimentacion_porPersona
                     "GastoOtros_porPersona")
 
 ui <- fluidPage(
-  titlePanel("Gastos por Persona según Motivo"),
-  sidebarLayout(
-    sidebarPanel(
-      selectInput('motivo', 'Seleccionar Motivo', unique(receptivo_fecha$Motivo))
-    ),
-    mainPanel(
-      h2("Gastos por Persona según Motivo", align = "center"),
-      plotOutput("gastosPlot")
-    )
+  titlePanel("Gastos por Persona según ..."),
+  tabsetPanel(
+    tabPanel( "Motivo",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput('motivo', 'Seleccionar Motivo', unique(receptivo_fecha$Motivo))
+          ),
+        mainPanel(
+          h2("Gastos por Persona según Motivo", align = "center"),
+          plotOutput("gastosPlot")
+          )
+        )
+      ),
+  tabPanel("Nacionalidad",
+           ),
+  tabPanel("Nivel de Educacion",
+           ),
+  tabPanel("Ocupacion",
+           ),
+  tabPanel("Transporte de Ingreso",
+           ),
+  tabPanel("Transporte de Egreso")
   )
 )
-
 server <- function(input, output) {
   output$gastosPlot <- renderPlot({
     datos_filtrados <- receptivo_fecha %>% 
