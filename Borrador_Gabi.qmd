@@ -318,6 +318,7 @@ receptivo_fecha_dia %>% head()
 subdatos <- receptivo_fecha_dia %>% 
   select(Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente, GastoTotal:GastoOtros_porPersona_Dia
 )
+subdatos %>% head()
 ```
 
 
@@ -345,6 +346,24 @@ rmse(rf, testing)
 library(ranger)
 ```
 
+```{r}
+library(here)
+library(tidyverse)
+library(randomForest)
+library(modelr)
+#separo training y test
+intrain <- sample(
+  x = 1:nrow(subdatos), 
+  size = nrow(subdatos)*.7)
+
+training <- subdatos[intrain,]
+
+testing <- subdatos[-intrain,]
+# ajustamos modelo lineal simple
+rf <- ranger(GastoTotal_porPersona_Dia~ .,data= training)
+#raiz cuadrada del error cuadr´atico medio
+rmse(rf, testing)
+```
 
 
 
