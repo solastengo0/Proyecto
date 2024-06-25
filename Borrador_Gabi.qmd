@@ -12,20 +12,17 @@ library(tidyverse)
 ```{r}
 library(here)
 library(readxl)
-receptivo <- read_excel(here::here(
-  "receptivo.xlsx"
-  ))
-View(receptivo)
+receptivo <- read_excel(here::here("data/receptivo.xlsx"))
 ```
 
 ```{r}
+#| eval: false
 library(here)
 library(readxl)
 diccionario <- read_excel(here::here(
   "Diccionario.xlsx"
   ))
 
-View(diccionario)
 ```
 
 
@@ -228,8 +225,7 @@ receptivo_fecha |> head()
 ## Gasto por persona por Día!
 
 ```{r}
-<<<<<<< HEAD
-receptivo_fecha <- 
+receptivo_fecha_dia <- 
 receptivo_fecha |> 
   mutate(across(
     .cols = ends_with("_porPersona"),
@@ -240,24 +236,13 @@ receptivo_fecha |>
 ```
 
 ```{r}
-receptivo_fecha |> select(!(IdIngresos:Destino))
+receptivo_fecha_dia |> select(!(IdIngresos:Destino))
 ```
-=======
->>>>>>> b3262610ae8097d3f811b1873fc6659775014b99
 
 
 
 kable
 install.packages("kableExtra")
-
-<<<<<<< HEAD
-
-
-
-
-
-
-
 
 
 
@@ -271,10 +256,91 @@ receptivo_fecha |> filter(Gente > 10) |> arrange(desc(GastoTotal))
 ```
 
 
-=======
+
 gt
 install.packages("gt")
 library(gt)
 
+
+```{r}
+install.packages("GGally")
+library(GGally)
 ```
->>>>>>> b3262610ae8097d3f811b1873fc6659775014b99
+
+```{r}
+receptivo_fecha_dia |> 
+  select(starts_with("Gasto") & ends_with("dia")) |> 
+  ggcorr()
+```
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(between(GastoOtros_porPersona_Dia, 1, 4999)) |> 
+  ggplot(aes(x = GastoOtros_porPersona_Dia, y = GastoTotal_porPersona_Dia)) +
+  geom_hex() +
+  geom_point(aes(x = GastoAlimentacion_porPersona_Dia, y = GastoTotal_porPersona_Dia), color = "red")
+```
+
+
+
+```{r}
+install.packages("ggridges")
+library(ggridges)
+```
+
+
+```{r}
+group <- 
+  receptivo |> 
+  select(starts_with("Gasto")) |> 
+  select(!(GastoTotal))
+
+ggplot(receptivo, aes(GastoTotal, group)) +
+  geom_density_ridges()
+```
+
+### Cómo se relaciona el gasto por persona por día, con otras variables de interes?
+
+
+#### Estadía menor o igual a 15 días
+```{r}
+receptivo_fecha_dia |> 
+  select(GastoTotal_porPersona_Dia, Estadia) |> 
+  filter(Estadia < 100 & GastoTotal_porPersona_Dia < 5000 & Estadia <= 15) |> 
+  ggplot(aes(x = Estadia, y = GastoTotal_porPersona_Dia)) +
+  geom_boxplot(aes(group = cut_width(Estadia, 1)))
+```
+
+
+```{r}
+receptivo_fecha_dia |> 
+  select(IdNacionalidad, Pais, Motivo, Alojamiento, GastoTotal_porPersona_Dia) |> 
+  group_by(IdNacionalidad, Pais, Motivo, Alojamiento) |>
+  summarise(sum. = sum(GastoTotal_porPersona_Dia)) |> 
+  arrange(desc(sum.)) |> 
+  filter(IdNacionalidad < 50) |> 
+  ggplot() + 
+  geom_boxplot(aes(
+    x = fct_inorder(Pais),
+    y = sum.
+  ))
+```
+
+```{r}
+receptivo_fecha_dia |> 
+  select(
+    IdNacionalidad, Pais, Motivo, Alojamiento, Estadia, GastoTotal_porPersona_Dia
+    ) |> 
+  filter(
+    IdNacionalidad < 40 & Estadia < 15 & GastoTotal_porPersona_Dia < 1000
+    ) |>
+ggplot() + 
+  geom_boxplot(aes(
+    x = fct_infreq(Pais),
+    y = GastoTotal_porPersona_Dia
+  ))
+```
+
+
+
+
