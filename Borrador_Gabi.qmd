@@ -12,7 +12,14 @@ library(tidyverse)
 ```{r}
 library(here)
 library(readxl)
+<<<<<<< HEAD
 receptivo <- read_excel(here::here("data/receptivo.xlsx"))
+=======
+receptivo <- read_excel(here::here(
+  "data/receptivo.xlsx"
+  ))
+View(receptivo)
+>>>>>>> 4ac32d38987efb1b48161071fe741f044d5bd67d
 ```
 
 ```{r}
@@ -224,6 +231,7 @@ receptivo_fecha |> head()
 
 ## Gasto por persona por Día!
 
+
 ```{r}
 receptivo_fecha_dia <- 
 receptivo_fecha |> 
@@ -338,8 +346,111 @@ ggplot() +
   geom_boxplot(aes(
     x = fct_infreq(Pais),
     y = GastoTotal_porPersona_Dia
+    )
+    )
+```
+    
+```{r}   
+install.packages(randomForest)
+library(randomForest)
+```
+
+
+```{r}
+ggplot(receptivo_fecha_dia) + 
+  geom_point(aes(
+    x = GastoAlojamiento_porPersona_Dia,
+    y = GastoTransporte_porPersona_Dia,
+    color = Estadia
   ))
 ```
+
+
+
+```{r}
+m2 <- lm(GastoTotal_porPersona_Dia ~ Estadia + GastoAlojamiento_porPersona_Dia + GastoTransporte_porPersona_Dia, data= receptivo_fecha_dia)
+summary(m2)
+```
+
+```{r}
+dd <- data.frame(R2 = summary(m2)$r.squared, sigma=summary(m2)$sigma, AIC=AIC(m2))
+
+kable(dd)
+```
+
+
+```{r}
+ggplot( ) + geom_point(aes(x=fitted(m2), y=rstudent(m2) )) +
+ labs(title='Residuos vs Predicciones',
+ x=expression( hat(y[i])) , y = expression(e[i]/SE(e[i])) ) +
+ theme(aspect.ratio = 1)
+```
+
+
+
+```{r}
+receptivo_fecha_dia %>% 
+  
+```
+
+
+```{r}
+receptivo_fecha_dia %>% head()
+```
+
+
+```{r}
+subdatos <- receptivo_fecha_dia %>% 
+  select(Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente, GastoTotal:GastoOtros_porPersona_Dia
+)
+subdatos %>% head()
+```
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(randomForest)
+library(modelr)
+#separo training y test
+intrain <- sample(
+  x = 1:nrow(subdatos), 
+  size = nrow(subdatos)*.7)
+
+training <- subdatos[intrain,]
+
+testing <- subdatos[-intrain,]
+# ajustamos modelo lineal simple
+rf <- randomForest(GastoTotal_porPersona_Dia~ .,data= training, na.action=na.omit)
+#raiz cuadrada del error cuadr´atico medio
+rmse(rf, testing)
+## [1] 3.370582
+```
+
+```{r}
+library(ranger)
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(randomForest)
+library(modelr)
+#separo training y test
+intrain <- sample(
+  x = 1:nrow(subdatos), 
+  size = nrow(subdatos)*.7)
+
+training <- subdatos[intrain,]
+
+testing <- subdatos[-intrain,]
+# ajustamos modelo lineal simple
+rf <- ranger(GastoTotal_porPersona_Dia~ .,data= training)
+#raiz cuadrada del error cuadr´atico medio
+rmse(rf, testing)
+```
+
+
 
 
 

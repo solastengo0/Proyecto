@@ -10,24 +10,31 @@ columnas_gasto <- c("GastoAlojamiento_porPersona", "GastoAlimentacion_porPersona
                     "GastoTours_porPersona", "GastoCompras_porPersona", 
                     "GastoOtros_porPersona")
 
-nombres_descriptivos <- c("Gasto en Alojamiento", "Gasto en Alimentación", 
-                          "Gasto en Transporte", "Gasto en Cultural", 
-                          "Gasto en Tours", "Gasto en Compras", 
-                          "Otros Gastos")
-
 ui <- fluidPage(
-  titlePanel("Gastos por Persona según Motivo"),
-  sidebarLayout(
-    sidebarPanel(
-      selectInput('motivo', 'Seleccionar Motivo', unique(receptivo_fecha$Motivo))
-    ),
-    mainPanel(
-      h2("Gastos por Persona según Motivo", align = "center"),
-      plotOutput("gastosPlot")
-    )
+  titlePanel("Gastos por Persona según ..."),
+  tabsetPanel(
+    tabPanel( "Motivo",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput('motivo', 'Seleccionar Motivo', unique(receptivo_fecha$Motivo))
+          ),
+        mainPanel(
+          h2("Gastos por Persona según Motivo", align = "center"),
+          plotOutput("gastosPlot")
+          )
+        )
+      ),
+  tabPanel("Nacionalidad",
+           ),
+  tabPanel("Nivel de Educacion",
+           ),
+  tabPanel("Ocupacion",
+           ),
+  tabPanel("Transporte de Ingreso",
+           ),
+  tabPanel("Transporte de Egreso")
   )
 )
-
 server <- function(input, output) {
   output$gastosPlot <- renderPlot({
     datos_filtrados <- receptivo_fecha %>% 
@@ -35,17 +42,25 @@ server <- function(input, output) {
       select(Motivo, all_of(columnas_gasto))
     
     datos_gathered <- datos_filtrados %>%
-      gather(key = "TipoGasto", value = "Gasto", -Motivo)
+      gather(key = "TipoGasto", value = "Gasto", -Motivo) %>% 
+      mutate(TipoGasto = case_match(
+        TipoGasto,
+        "GastoAlojamiento_porPersona" ~ "Gasto en Alojamiento",
+        "GastoAlimentacion_porPersona" ~ "Gasto en Alimentacion",
+        "GastoTransporte_porPersona" ~ "Gasto en Transporte", 
+        "GastoCultural_porPersona" ~ "Gasto Cultural", 
+        "GastoTours_porPersona" ~ "Gasto en Tours", 
+        "GastoCompras_porPersona" ~ "Gasto en Compras", 
+        "GastoOtros_porPersona" ~ "Otros Gastos"
+      ))
     
     ggplot(data = datos_gathered, aes(x = reorder(TipoGasto, Gasto), y = Gasto, fill = TipoGasto)) +
       geom_bar(stat = "identity") +
-      scale_fill_manual(values = palette()[1:length(nombres_descriptivos)], 
-                        labels = setNames(nombres_descriptivos, nombres_descriptivos)) +
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
            title = paste("Gastos por Persona para el Motivo:", input$motivo)) +
-      scale_x_discrete(labels = nombres_descriptivos) +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      theme(axis.text.x = element_blank())
+      
   })
 }
 
