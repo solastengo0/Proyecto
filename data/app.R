@@ -24,7 +24,16 @@ ui <- fluidPage(
           )
         )
       ),
-  tabPanel("Nacionalidad",
+  tabPanel("Nacionalidad", 
+   sidebarLayout(
+    sidebarPanel(
+      selectInput('nacionalidad', 'Seleccionar nacionalidad', unique(receptivo_fecha$Pais))
+    ),
+    mainPanel(
+      h2("Gastos por Persona según nacionalidad", align = "center"),
+      plotOutput("gastosPlotn")
+    )
+  )
            ),
   tabPanel("Nivel de Educacion",
            ),
@@ -61,6 +70,32 @@ server <- function(input, output) {
            title = paste("Gastos por Persona para el Motivo:", input$motivo)) +
       theme(axis.text.x = element_blank())
       
+  })
+  
+  output$gastosPlotn <- renderPlot({
+    datos_filtrados <- receptivo_fecha %>% 
+      filter(Pais == input$Pais) %>%
+      select(Pais, all_of(columnas_gasto))
+    
+    datos_gathered <- datos_filtrados %>%
+      gather(key = "TipoGasto", value = "Gasto", -Pais) %>% 
+      mutate(TipoGasto = case_match(
+        TipoGasto,
+        "GastoAlojamiento_porPersona" ~ "Gasto en Alojamiento",
+        "GastoAlimentacion_porPersona" ~ "Gasto en Alimentacion",
+        "GastoTransporte_porPersona" ~ "Gasto en Transporte", 
+        "GastoCultural_porPersona" ~ "Gasto Cultural", 
+        "GastoTours_porPersona" ~ "Gasto en Tours", 
+        "GastoCompras_porPersona" ~ "Gasto en Compras", 
+        "GastoOtros_porPersona" ~ "Otros Gastos"
+      ))
+    
+    ggplot(data = datos_gathered, aes(x = reorder(TipoGasto, Gasto), y = Gasto, fill = TipoGasto)) +
+      geom_bar(stat = "identity") +
+      theme_minimal() +
+      labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
+           title = paste("Gastos por Persona para la nacionalidad:", input$Pais)) +
+      theme(axis.text.x = element_blank())
   })
 }
 
