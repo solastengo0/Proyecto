@@ -2,45 +2,36 @@
 title: "Ingresos a Uruguay"
 author: "Juan Cadenas, Sol Astengo, Gabriel Bermudez"
 format: pdf
+execute:
+  echo: false
+  warning: false
+lang: es
+fig-format: retina
+fig-height: 10
+fig-width: 8
 ---
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
-#| include: false
-
 library(tidyverse)
+library(ggplot2)
 library(here)
 library(readxl)
 library(forcats)
-library(gt)
 library(knitr)
+library(gt)
 ```
 
 # Introducción
 
-Uruguay se construyo bajo la base de la emigracion, y durante su historia el flujo de personas fue determinante a la hora de moldear la estructura de su sociedad. Pero mas alla de la poblacion residente, existe un alto porcentaje de individuos que visita el pais por lapsos de tiempo mas reducidos y motivos diversos, pero que de igual manera inciden directamente en su economia.
+Uruguay se construyó bajo la base de la emigración, y durante su historia el flujo de personas fue determinante a la hora de moldear la estructura de su sociedad. Pero mas allá de la población residente, existe un alto porcentaje de individuos que visita el país por lapsos de tiempo mas reducidos y motivos diversos, pero que de igual manera inciden directamente en su economía.
 
-Para esto indagaremos sobre los datos ofrecidos por el sistema de datos abiertos, "Turismo Receptivo". Analizaremos puntualmente a que areas corresponden los gastos de los visitantes, sus distribuciones y de que maneras podemos llegar a explicarlos segun el perfil de quien ingresa.
+Para esto indagaremos sobre los datos ofrecidos por el sistema de datos abiertos, "Turismo Receptivo". Analizaremos puntualmente a que areas corresponden los gastos de los visitantes, sus distribuciones y de que maneras podemos llegar a explicarlos según el perfil de quien ingresa.
 
-La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las que destacamos, nacionalidad del visitante, motivo de ingreso, duracion de la estadia, nivel de educacion, ocupación, entre otros.
+La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las que destacamos, nacionalidad del visitante, motivo de ingreso, duración de la estadía, nivel de educación, ocupación, entre otros.
 
 # Datos 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
-
-library(tidyverse)
-library(ggplot2)
-library(xtable)
-library(here)
-library(stringr)
-library(readxl)
-library(gt)
-
 receptivo <- read_excel(here("data", "receptivo.xlsx"))
 diccionario <- read_excel(here("data", "Diccionario.xlsx"))
 
@@ -49,45 +40,38 @@ View(diccionario)
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Variables de interés y su descripción"
 
 diccionario %>%
   select(nombreDeAtributo, descripcion) %>% 
   filter(nombreDeAtributo %in% c("Lugar Ingreso","Lugar Egreso
-", "Pais", "Motivo", "Ocupacion", "Estudio", "Destino Localidad", "Alojamiento", "TransporteLocal", "Destino", "Estadia", "Gente", "GastoTotal","GastoAlojamiento", "GastoAlimentacion", "GastoTransporte", "GastoCultural","GastoTours", "GastoCompras", "GastoOtros")) %>% 
-  kable(caption = "Variables de interes y su descripción")
+", "Pais", "Motivo", "Ocupacion", "Estudio", "Destino Localidad", "Alojamiento", "TransporteLocal", "Destino", "Estadia", "Gente", "GastoTotal","GastoAlojamiento", "GastoAlimentacion", "GastoTransporte", "GastoCultural","GastoTours", "GastoCompras", "GastoOtros")) %>%
+  gt()
 ```
 
 
 # Objetivo
 
-Buscamos a partir de las variables anteriormente nombradas, entender como influyen en el gasto, si es que lo hacen. Veremos como se comportan los gastos segun el motivo de visita al pais y si existe alguna relacion entre ellos. Tambien tendremos en cuenta a la hora de mirar la forma de estos gastos las nacionalidades correspondientes de los individuos. En conclusion nos centraremos en el gasto como nuestra variable de respuesta, y trataremos de explicarlo en funcion de las caracteristicas de los no residentes que consumen dentro de nuestra economia.
+Buscamos a partir de las variables anteriormente nombradas, entender como influyen en el gasto, si es que lo hacen. Veremos como se comportan los gastos según el motivo de visita al país y si existe alguna relación entre ellos. También tendremos en cuenta a la hora de mirar la forma de estos gastos las nacionalidades correspondientes de los individuos. En conclusion nos centraremos en el gasto como nuestra variable de respuesta, y trataremos de explicarlo en función de las características de los no residentes que consumen dentro de nuestra economía.
 
 # Análisis Exploratorio de Datos
 
-Realizamos un analisis exploratorio de los datos, con el fin de familiarizarnos con ellos y entenderlos mejor.
+Realizamos un análisis exploratorio de los datos, con el fin de familiarizarnos con ellos y entenderlos mejor.
 
-Entre los graficos y tablas que generamos para visualizar los datos, destacamos los siguientes, que nos ayudan a darnos cuenta cuales seran las mejores formas para cumplir con nuestros objetivos;
+Entre los gráficos y tablas que generamos para visualizar los datos, destacamos los siguientes, que nos ayudan a darnos cuenta cuales serán las mejores formas para cumplir con nuestros objetivos;
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Distribución del motivo de ingreso"
 
 ggplot(receptivo) +
   geom_bar(aes(x = fct_rev(fct_infreq(Motivo)), fill = Motivo)) +
   coord_flip()+
   labs(x = "Motivo",
-       y = "Cantidad",
-       caption = "Figura 1: Distribucion del motivo de ingreso")
+       y = "Cantidad")
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Distribución del MOTIVO de ingreso"
 
 ## Distribución del MOTIVO de ingreso
 
@@ -95,19 +79,17 @@ receptivo |>
   group_by(Motivo) |> 
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |>
-  kable(caption = "Distribución del MOTIVO de ingreso")
+  gt()
 ```
 
-En un primer plano podemos apreciar que la gran mayoria de las personas que ingresan al pais lo hacen exclusivamente por motivos recreativos y/o de indole social.
+En un primer plano podemos apreciar que la gran mayoría de las personas que ingresan al país lo hacen exclusivamente por motivos recreativos y/o de índole social.
 
-Muchas de las observaciones corresponden a un grupo de varios individuos. Trabajamos bajo el supuesto de que todos los integrantes del grupo comparten nacionalidad asi como los gastos refieren a la suma de los gastos de todo el grupo.
+Muchas de las observaciones corresponden a un grupo de varios individuos. Trabajamos bajo el supuesto de que todos los integrantes del grupo comparten nacionalidad así como los gastos refieren a la suma de los gastos de todo el grupo.
 
 ## Distribucion de las nacionalidades de los visitantes
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Cantidad de ingresos por nacionalidad del ingresante"
 
 receptivo |> 
   select(IdNacionalidad, Pais) |> 
@@ -115,17 +97,14 @@ receptivo |>
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |> 
   ungroup() |> 
-  kable(, caption = "Cantidad de ingresos por nacionalidad del ingresante")
+  gt()
 
 ```
 
-Suponemos que gran parte de los uruguayos que vuelven a pasar unos dias es con propositos sociales, pero y el alto porcentaje de Argentinos? Brasileros? a que vienen? El siguiente grafico nos muestra los motivos de visita para las personas con nacionalidades americanas.
+Suponemos que gran parte de los uruguayos que vuelven a pasar unos días es con propósitos sociales, pero y el alto porcentaje de Argentinos? Brasileros? a que vienen? El siguiente gráfico nos muestra los motivos de visita para las personas con nacionalidades americanas.
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
-
+#| include: false
 datos <- receptivo |>
   filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
   group_by(Motivo, Pais) |>
@@ -136,25 +115,26 @@ datos <- receptivo |>
   group_by(Motivo) |>
   mutate(proporcion = cantidad / sum(cantidad),
          acumulado = cumsum(proporcion))
+```
+
+```{r}
+#| fig-cap: "Distribución de motivos de visita según nacionalidad"
 
  ggplot(datos, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo)) +
     geom_col(position = "fill") +
     coord_flip() +
     labs(x = "Nacionalidad", 
-         y = "Proporción acumulada",
-         caption = "Figura 2: Distribución de motivos de visita según nacionalidad") +
+         y = "Proporción acumulada") +
     scale_y_continuous(labels = scales::percent) +
     theme_minimal() 
 ```
 
-Respondiendo a las preguntas anteriores, personas de Argentina y Brasil ingresan al país por motivos varios, sin uno que predomine mucho sobre los demas motivos. En cambio, gracias a este grafico podemos visualizar comportamientos extraños cuando se trata de otros paises, por ejemplo el motivo que predomina para que los venezolanos ingresen al país es "Otros", tomando en cuenta la situacion política y económica del país tendría sentido que se clasifique en esta categoría sus casos.
+Respondiendo a las preguntas anteriores, personas de Argentina y Brasil ingresan al país por motivos varios, sin uno que predomine mucho sobre los demás motivos. En cambio, gracias a este gráfico podemos visualizar comportamientos extraños cuando se trata de otros países, por ejemplo el motivo que predomina para que los venezolanos ingresen al país es "Otros", tomando en cuenta la situación política y económica del país tendría sentido que se clasifique en esta categoría sus casos.
 
-En la figura 2 vemos unicamente la nacionalidad de los ingresantes americanos. Que tal se comportaran los datos si se trata de nacionalidades europeas o asiaticas?, para responder esa pregunta realizamos otro grafico igual, esta vez incluyendo los paises deseados.
+En la figura 2 vemos únicamente la nacionalidad de los ingresantes americanos. Que tal se comportaran los datos si se trata de nacionalidades europeas o asiáticas?, para responder esa pregunta realizamos otro gráfico igual, esta vez incluyendo los países deseados.
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| include: false
 
 ## MOTIVO según NACIONALIDAD, sólo quienes ingresan desde afuera de américa
 datos2 <- receptivo |>
@@ -167,91 +147,83 @@ datos2 <- datos2 |>
   group_by(Motivo) |>
   mutate(proporcion = cantidad / sum(cantidad),
          acumulado = cumsum(proporcion))
+```
+
+```{r}
+#| fig-cap: "Distribución de motivos de visita según nacionalidad"
 
 ggplot(datos2, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo)) +
   geom_col(position = "fill") +
   coord_flip() +
   labs(x = "Nacionalidad",
-       y = "Proporción acumulada",
-       caption = "Figura 3: Distribución de motivos de visita según nacionalidad.") +
+       y = "Proporción acumulada") +
   scale_y_continuous(labels = scales::percent) +
   theme_minimal()
 ```
 
-Observamos que en general las personas ingresantes al país con nacionalides europeas o asiaticas, lo hacen con diferentes fines, sin uno que predomine sobre otros. Excepto cuando se trata de las personas provinientes de Suecia, en este caso vemos que el mayor motivo por el que ingresan al país es debido a que éste es su segunda residencia, este dato llama la atención ya que es la única nacionalidad en la que sucede este caso.
+
+Observamos que en general las personas ingresantes al país con nacionalidades europeas o asiáticas, lo hacen con diferentes fines, sin uno que predomine sobre otros. Excepto cuando se trata de las personas provenientes de Suecia, en este caso vemos que el mayor motivo por el que ingresan al país es debido a que éste es su segunda residencia, este dato llama la atención ya que es la única nacionalidad en la que sucede este caso.
 
 ## Gasto en alojamiento
 
-Para preever como podria comportarse el gasto en alojamiento, podemos ver cuales son las opciones de este más usuales entre los ingresantes. Para esto se genera la siguiente tabla:
+Para prever como podría comportarse el gasto en alojamiento, podemos ver cuales son las opciones de este más usuales entre los ingresantes. Para esto se genera la siguiente tabla:
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Cantidad de observaciones por alojamiento"
 
 ## Cantidad de observaciones por alojamiento
-
 receptivo |> 
   group_by(Alojamiento) |> 
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |>
-  kable(, caption = "Cantidad de observaciones por alojamiento")
+  gt()
 ```
 
 En la tabla 4 podemos ver que la forma de alojamiento que es mas usual entre los visitantes es la vivienda de familiares/amigos que son residentes en el país, por lo que podemos asumir que estas personas gastaran poco o nada en alojamiento?, veamoslo 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Gasto en alojamiento según alojamiento"
 
 receptivo %>% 
   group_by(Alojamiento) %>% 
   ggplot(aes(x = GastoAlojamiento, y = Alojamiento)) +
   geom_bar(stat = "identity") +
   labs(
-    x = "Gasto en Alojamiento", 
-    caption = "Figura 4: Gasto en alojamiento segun alojamiento"
-  ) +
+    x = "Gasto en Alojamiento") +
   theme(
     axis.ticks.x = element_blank(),
     axis.text.x = element_blank()
   )
 ```
 En la figura 4 vemos como las personas que pertenecen al grupo de "vivienda familiares/amigos residentes" cuando se trata del alojamiento son de los que menos gastan en este, por lo tanto podemos decir que el supuesto anterior se cumple. 
-En este grafico tambien llama la atencion que las personas que ingresan al pais y cuentan con vivienda propia son de las personas que mas gastan en alojamiento, por lo que podriamos suponer que estas personas se encuentran en proceso de pagar tal vivienda.
+En este gráfico también llama la atención que las personas que ingresan al país y cuentan con vivienda propia son de las personas que mas gastan en alojamiento, por lo que podríamos suponer que estas personas se encuentran en proceso de pagar tal vivienda.
 
 ## Gasto en Transporte 
 
-De igual forma que el gasto en alojamiento esta directamente relacionado con que forma de alojarse en el país, en su estadía, elige cada visitante, el gasto en transporte se puede relacionar con cual es el metodo de transporte local mas usado por los ingresantes. 
-Para visualizar como podria comportarse el gasto en transporte, realizamos una tabla en donde vemos cual es el mas usualmente usado entre los ingresantes. 
+De igual forma que el gasto en alojamiento esta directamente relacionado con que forma de alojarse en el país, en su estadía, elige cada visitante, el gasto en transporte se puede relacionar con cual es el método de transporte local mas usado por los ingresantes. 
+Para visualizar como podría comportarse el gasto en transporte, realizamos una tabla en donde vemos cual es el mas usualmente usado entre los ingresantes. 
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Cantidad de observaciones por transporte utilizado locamente"
 
 ## Cantidad de observaciones por alojamiento
 
 receptivo |> 
   group_by(TransporteLocal) |> 
   summarise(cant. = n()) |> 
-  arrange(desc(cant.))  |> 
-  kable(, caption = "Cantidad de observaciones por transporte utilizado localmente")
+  arrange(desc(cant.))  |>
+  gt()
 ```
 De esta forma en la tabla 5 podemos ver que gran parte de los ingresantes utiliza auto propio para movilizarse dentro del país. Pero esto significa que el gasto en transporte es 0, o se toma en cuesta el gasto en gasolina, si el auto necesitaría alguna reparación en el viaje, entre otros factores?.
-Para responder esta pregunta realizamos el siguiente grafico 
+Para responder esta pregunta realizamos el siguiente gráfico 
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Gasto en transporte según transporte local"
 
 receptivo %>% 
   ggplot(aes(y = TransporteLocal, x = GastoTransporte)) +
   geom_bar(stat = "identity") +
   labs(x = "Gasto en Transporte",
-       y = "Transporte Local",
-       caption = "Figura 5: Gasto en transporte segun transporte local") +
+       y = "Transporte Local") +
   theme(
     axis.ticks.x = element_blank(),
     axis.text.x = element_blank()
@@ -260,9 +232,6 @@ receptivo %>%
 En la Figura 5 podemos ver que todos los gastos relacionados a auto propio como transporte local, parecen estar incluidos en la variable de gasto en transporte.
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 ## Distribución de la RESIDENCIA de las personas que ingresaron.
@@ -275,9 +244,6 @@ receptivo |>
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 ### Gráfica de las 10 principales residencias
@@ -294,9 +260,6 @@ ggplot(
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
  
 ### Gráfica de la distribución de residencia
@@ -307,9 +270,6 @@ ggplot(receptivo) +
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 ## MOTIVO de ingreso según RESIDENCIA
@@ -330,9 +290,6 @@ receptivo |>
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 ### Número total de personas
@@ -343,14 +300,11 @@ receptivo |>
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 #### Nota:
 
-# IdNacionalidad, de 50 para abajo es america (sur, central y norte) y 50 para arriba es Europa, Asia, Oceania (resto del mundo).
+# IdNacionalidad, de 50 para abajo es américa (sur, central y norte) y 50 para arriba es Europa, Asia, Oceania (resto del mundo).
 ```
 
 ### Nota sobre fechas
@@ -358,9 +312,6 @@ receptivo |>
 Se identificó un posible error en la fecha de ingreso del 2011-12-27, con una fecha de egreso 8 años después. Se supone que en vez de 2011, debería ser 2018, ya que la duración de estadía es de 14 días. Por lo tanto, la fecha de ingreso se ha corregido de 2011-12-27 a 2018-12-27 para reflejar correctamente la duración de la estadía.
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 receptivo <- receptivo %>%
@@ -370,9 +321,6 @@ receptivo <- receptivo %>%
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 ## Cambio de fecha de ingreso/egreso por año y mes
@@ -411,12 +359,9 @@ receptivo_fecha |>
 
 ### Incorporación de variables gastos por persona.
 
-Para poder conseguir los objetivos deseados decidimos que lo mejor es tener los gastos divididos por persona, ya que tenemos una variable que describe la cantidad de personas que se encontraban en el grupo de viaje y suponemos que los gastos son los realizados entre todos los del grupo en conjunto. Así que agregamos a nuestros datos las columnas corresponientes a los gastos por persona para facilitar calculos posteriores. (almacenamos los cambios en "receptivo_fecha"). A continuacion en la tabla 6 podemos ver algunas de las variables creadas
+Para poder conseguir los objetivos deseados decidimos que lo mejor es tener los gastos divididos por persona, ya que tenemos una variable que describe la cantidad de personas que se encontraban en el grupo de viaje y suponemos que los gastos son los realizados entre todos los del grupo en conjunto. Así que agregamos a nuestros datos las columnas correspondientes a los gastos por persona para facilitar cálculos posteriores. (almacenamos los cambios en "receptivo_fecha"). A continuación en la tabla 6 podemos ver algunas de las variables creadas
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
 ## Cálculo de los gastos por persona
@@ -432,12 +377,10 @@ receptivo_fecha |>
 ```
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
+#| fig-cap: "Algunas nuevas columnas de gastos por persona"
 
 receptivo_fecha[50:60, 55:60]  |>
-  kable(caption = "Algunas nuevas columnas de gastos por persona")
+  gt()
 ```
 
 # ¿Como cumplir con el objetivo?
@@ -445,22 +388,31 @@ receptivo_fecha[50:60, 55:60]  |>
 Para cumplir con lo deseado, utilizaremos una serie de herramientas, comenzaremos creando una Shiny app interactiva que permitirá explorar y manipular estos datos. A continuación, utilizaremos herramientas de mapeo para visualizar geográficamente la información sobre los gastos realizados por los ingresantes en Uruguay. Luego, implementaremos métodos gráficos para visualizar datos de dos o más variables cualitativas, facilitando la interpretación y el análisis de relaciones complejas entre variables como la nacionalidad y el motivo de ingreso, con respecto a los gastos. Finalmente, implementaremos modelos de árboles y bosques para realizar predicciones precisas basadas en patrones identificados en los datos. 
 
 ## Shiny App
-Para permitir una visualización interactiva de cómo los visitantes gastan en diversas áreas, optamos por una serie de graficos en los cuales tambien se tomaran en cuenta otras variables, como el motivo del viaje, la nacionalidad del visitante, el nivel de educación de este, entre otras, y de esta forma podremos ver como influyen las demás variables en los gastos en diferentes areas.
+Para permitir una visualización interactiva de cómo los visitantes gastan en diversas áreas, optamos por una serie de gráficos en los cuales también se tomaran en cuenta otras variables, como el motivo del viaje, la nacionalidad del visitante, el nivel de educación de este, entre otras, y de esta forma podremos ver como influyen las demás variables en los gastos en diferentes areas.
 
 ```{r}
-#| echo: false
-#| message: false
-#| warning: false
 #| include: false
 
-## Comentario: el archivo app.R se encuentra dentro de la carpeta data, en este estará el codigo de la shiny app actualmente incompleta.
+## Comentario: el archivo app.R se encuentra dentro de la carpeta data, en este estará el código de la shiny app actualmente incompleta.
 ```
 
 ## Mapa de Uruguay
 Nos interesa saber como se distribuye el gasto total en el interior del país, contamos con la variable "Departamento" que como anteriormente se visualiza en la tabla 1, nos indica cual es el país de destino del visitante, supondremos que allí se efectuarán la mayoría de los gastos y de esa forma generaremos un mapa que marcará con colores mas oscuros los departamentos en donde se producirá mayor gasto por los ingresantes.
 
 ## Otros gráficos
-Realizaremos una serie de gráficos en donde podremos visualizar como afectan simultaneamente dos o más variables al gasto total. 
+Realizaremos una serie de gráficos en donde podremos visualizar como afectan simultáneamente dos o más variables al gasto total. 
 
 ## Arboles y Bosques
 A desarrollar...
+
+### Paquetes utilizados y fuente de los datos
+##### Datos:
+Catalogo de Datos Abiertos. Ministerio de Tursimo. https://catalogodatos.gub.uy/dataset/ministerio-de-turismo-turismo-receptivo
+
+##### Paquetes:
+ H. Wickham. ggplot2: Elegant Graphics for Data Analysis.
+  Springer-Verlag New York, 2016.
+Wickham H, François R, Henry L, Müller K, Vaughan D (2023). _dplyr: A Grammar of Data Manipulation_. R
+  package version 1.1.2, <https://CRAN.R-project.org/package=dplyr>.
+
+
