@@ -12,14 +12,11 @@ library(tidyverse)
 ```{r}
 library(here)
 library(readxl)
-<<<<<<< HEAD
-receptivo <- read_excel(here::here("data/receptivo.xlsx"))
-=======
+
 receptivo <- read_excel(here::here(
   "data/receptivo.xlsx"
   ))
 View(receptivo)
->>>>>>> 4ac32d38987efb1b48161071fe741f044d5bd67d
 ```
 
 ```{r}
@@ -290,22 +287,50 @@ receptivo_fecha_dia |>
 ```
 
 
+### Distribución del gasto segun el Estudio (los que tenemos más datos)
 
 ```{r}
 install.packages("ggridges")
 library(ggridges)
 ```
 
+```{r}
+receptivo_fecha_dia |> 
+  filter(GastoTotal_porPersona_Dia < 300 & Estudio %in% c("Primaria completa", "Secundaria completa", "Secundaria incompleta", "Terciaria completa", "Terciaria incompleta")) |> 
+  ggplot(aes(
+    x = GastoTotal_porPersona_Dia, 
+    y = Estudio, 
+    fill = Estudio
+    )) +
+  geom_density_ridges() +
+  theme_ridges() + 
+  theme(legend.position = "none")
+```
+
+
+### Distribución del gasto segun el motivo
 
 ```{r}
-group <- 
-  receptivo |> 
-  select(starts_with("Gasto")) |> 
-  select(!(GastoTotal))
-
-ggplot(receptivo, aes(GastoTotal, group)) +
-  geom_density_ridges()
+library(viridis)
 ```
+
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(GastoTotal_porPersona_Dia < 350 & Motivo %in% c("Ocio y vacaciones", "Visita a familiares y amigos" , "Trabajo / Profesional", "Transito", "Segunda Residencia")) |> 
+  ggplot(aes(
+    x = GastoTotal_porPersona_Dia, 
+    y = Motivo, 
+    fill = Motivo
+    )) +
+  geom_density_ridges() +
+  theme_ridges() + 
+  theme(legend.position = "none")
+```
+
+
+
+
 
 ### Cómo se relaciona el gasto por persona por día, con otras variables de interes?
 
@@ -343,15 +368,16 @@ receptivo_fecha_dia |>
     IdNacionalidad < 40 & Estadia < 15 & GastoTotal_porPersona_Dia < 1000
     ) |>
 ggplot() + 
-  geom_boxplot(aes(
+  geom_violin((aes(
     x = fct_infreq(Pais),
     y = GastoTotal_porPersona_Dia
     )
     )
+  )
 ```
     
 ```{r}   
-install.packages(randomForest)
+install.packages("randomForest")
 library(randomForest)
 ```
 
@@ -439,17 +465,23 @@ library(modelr)
 #separo training y test
 intrain <- sample(
   x = 1:nrow(subdatos), 
-  size = nrow(subdatos)*.7)
+  size = nrow(subdatos)*.5)
 
 training <- subdatos[intrain,]
 
 testing <- subdatos[-intrain,]
 # ajustamos modelo lineal simple
-rf <- ranger(GastoTotal_porPersona_Dia~ .,data= training)
+rf <- ranger(GastoTotal_porPersona_Dia~ ., data= training, na.action=na.omit)
 #raiz cuadrada del error cuadr´atico medio
 rmse(rf, testing)
 ```
 
+
+
+```{r}
+training %>% 
+  select(Motivo) %>% levels()
+```
 
 
 
