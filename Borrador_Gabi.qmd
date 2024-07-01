@@ -328,6 +328,36 @@ receptivo_fecha_dia |>
   theme(legend.position = "none")
 ```
 
+```{r}
+receptivo_fecha_dia |> 
+  select(
+    IdNacionalidad, Pais, Motivo, Alojamiento, Estadia, GastoTotal_porPersona_Dia
+    ) |> 
+  filter(
+    IdNacionalidad < 40 & Estadia < 15 & GastoTotal_porPersona_Dia < 350
+    ) |> 
+  ggplot(aes(
+    x = GastoTotal_porPersona_Dia, 
+    y = Pais, 
+    fill = Pais
+    )) +
+  geom_density_ridges() +
+  theme_ridges() + 
+  theme(legend.position = "none")
+```
+
+
+
+
+
+```{r}
+library(ggmosaic)
+
+receptivo_fecha_dia |> 
+  filter(Estudio %in% c("Primaria completa", "Secundaria completa", "Secundaria incompleta", "Terciaria completa", "Terciaria incompleta") & Motivo %in% c("Ocio y vacaciones", "Visita a familiares y amigos" , "Trabajo / Profesional", "Transito", "Segunda Residencia")) |> 
+ggplot() +
+ geom_mosaic(aes(x = product(Estudio, Motivo), fill= Motivo))
+```
 
 
 
@@ -365,7 +395,7 @@ receptivo_fecha_dia |>
     IdNacionalidad, Pais, Motivo, Alojamiento, Estadia, GastoTotal_porPersona_Dia
     ) |> 
   filter(
-    IdNacionalidad < 40 & Estadia < 15 & GastoTotal_porPersona_Dia < 1000
+    IdNacionalidad < 40 & Estadia < 15 & GastoTotal_porPersona_Dia < 350
     ) |>
 ggplot() + 
   geom_violin((aes(
