@@ -6,17 +6,57 @@ format: pdf
 
 ```{r}
 library(tidyverse)
-```
-
-
-```{r}
 library(here)
 library(readxl)
 
 receptivo <- read_excel(here::here(
   "data/receptivo.xlsx"
   ))
-View(receptivo)
+
+receptivo_fecha <-
+  receptivo |> 
+  separate(
+    col = FechaIngreso,
+    into = c("anio_I", "mes_I", "dia_I"),
+    convert = TRUE
+  )
+
+# Separo FechaEgreso en anio, mes y día:
+receptivo_fecha <- 
+  receptivo_fecha |> 
+  separate(
+    col = FechaEgreso,
+    into = c("anio_E", "mes_E", "dia_E"),
+    convert = TRUE
+  )
+
+# Creo Variable aniomes:
+receptivo_fecha <- 
+  receptivo_fecha |>
+  mutate(
+    aniomes_I = anio_I*100 + mes_I,
+    aniomes_E = anio_E*100 + mes_E,
+    .before = anio_I
+    )
+
+receptivo_fecha <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = starts_with("Gasto"),
+    .fns = ~ round((.x/Gente), 2),
+    .names = "{.col}_porPersona"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlimentacion, GastoAlimentacion_porPersona, GastoTransporte, GastoTransporte_porPersona, GastoCultural, GastoCultural_porPersona, GastoTours, GastoTours_porPersona, GastoCompras, GastoCompras_porPersona, GastoOtros, GastoOtros_porPersona, Coef:CoefTot)
+
+receptivo_fecha_dia <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = ends_with("_porPersona"),
+    .fns = ~ round((.x/Estadia), 2),
+    .names = "{.col}_Dia"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoTotal_porPersona_Dia, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlojamiento_porPersona_Dia, GastoAlimentacion, GastoAlimentacion_porPersona, GastoAlimentacion_porPersona_Dia, GastoTransporte, GastoTransporte_porPersona, GastoTransporte_porPersona_Dia, GastoCultural, GastoCultural_porPersona, GastoCultural_porPersona_Dia, GastoTours, GastoTours_porPersona, GastoTours_porPersona_Dia, GastoCompras, GastoCompras_porPersona, GastoCompras_porPersona_Dia, GastoOtros, GastoOtros_porPersona, GastoOtros_porPersona_Dia, Coef:CoefTot)
+
 ```
 
 ```{r}
@@ -24,7 +64,7 @@ View(receptivo)
 library(here)
 library(readxl)
 diccionario <- read_excel(here::here(
-  "Diccionario.xlsx"
+  "data/Diccionario.xlsx"
   ))
 
 ```
@@ -429,6 +469,8 @@ summary(m2)
 ```
 
 ```{r}
+library(kableExtra)
+
 dd <- data.frame(R2 = summary(m2)$r.squared, sigma=summary(m2)$sigma, AIC=AIC(m2))
 
 kable(dd)
@@ -512,6 +554,86 @@ rmse(rf, testing)
 training %>% 
   select(Motivo) %>% levels()
 ```
+
+
+## Agregar otra variable de Motivo en la que el valor 'Otro' incluye a:
+Estudios
+Salud / wellness			
+Compras			
+Religioso
+MICE
+
+```{r}
+receptivo_fecha_dia |> 
+  group_by(Motivo) |> 
+  summarise(n. = n()) |> 
+  arrange(desc(n.))
+```
+
+```{r}
+#Cantidad de 'Otros' que quiero:
+receptivo_fecha_dia |> 
+  group_by(Motivo) |> 
+  summarise(n. = n()) |> 
+  arrange(desc(n.)) |> 
+  filter(n. < 1000) |> 
+  summarise(sum(n.))
+```
+
+
+
+```{r}
+receptivo_fecha_dia <- 
+  receptivo_fecha_dia |> 
+  mutate(
+    Motivo_otr = case_when(
+      Motivo == "Estudios" ~ "Otros",
+      Motivo == "Salud / wellness" ~ "Otros",
+      Motivo == "Compras" ~ "Otros",
+      Motivo == "Religioso" ~ "Otros",
+      Motivo == "MICE" ~ "Otros",
+      .default = Motivo
+    ),
+    .after = "Motivo"
+  )
+```
+
+```{r}
+receptivo_fecha_dia |> 
+  group_by(Motivo_otr) |> 
+  summarise(n. = n()) |> 
+  arrange(desc(n.))
+```
+
+
+```{r}
+receptivo_fecha_dia |>
+  filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
+  group_by(Motivo_otr, Pais) |>
+  summarise(cantidad = n()) |>
+  arrange(desc(cantidad)) |> 
+  mutate(proporcion = cantidad / sum(cantidad),
+         acumulado = cumsum(proporcion)) |> 
+
+ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
+    geom_col(position = "fill") +
+    coord_flip() +
+    labs(x = "Nacionalidad", 
+         y = "Proporción acumulada") +
+    scale_y_continuous(labels = scales::percent) +
+    theme_minimal() 
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 
