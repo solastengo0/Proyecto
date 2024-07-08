@@ -40,13 +40,13 @@ View(diccionario)
 ```
 
 ```{r}
-#| fig-cap: "Variables de interés y su descripción"
+#| table-cap: "Variables de interés y su descripción"
 
 diccionario %>%
   select(nombreDeAtributo, descripcion) %>% 
   filter(nombreDeAtributo %in% c("Lugar Ingreso","Lugar Egreso
-", "Pais", "Motivo", "Ocupacion", "Estudio", "Destino Localidad", "Alojamiento", "TransporteLocal", "Destino", "Estadia", "Gente", "GastoTotal","GastoAlojamiento", "GastoAlimentacion", "GastoTransporte", "GastoCultural","GastoTours", "GastoCompras", "GastoOtros")) %>%
-  gt()
+", "Pais", "Motivo", "Ocupacion", "Estudio", "Destino Localidad", "Alojamiento", "TransporteLocal", "Destino", "Estadia", "Gente", "GastoTotal","GastoAlojamiento", "GastoAlimentacion", "GastoTransporte", "GastoCultural","GastoTours", "GastoCompras", "GastoOtros")) %>% 
+  kable(caption = "Variables de interés y su descripción")
 ```
 
 
@@ -71,15 +71,13 @@ ggplot(receptivo) +
 ```
 
 ```{r}
-#| fig-cap: "Distribución del MOTIVO de ingreso"
-
-## Distribución del MOTIVO de ingreso
+#| table-cap: "Distribución del MOTIVO de ingreso"
 
 receptivo |> 
   group_by(Motivo) |> 
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |>
-  gt()
+  kable(caption = "Distribución del MOTIVO de ingreso")
 ```
 
 En un primer plano podemos apreciar que la gran mayoría de las personas que ingresan al país lo hacen exclusivamente por motivos recreativos y/o de índole social.
@@ -89,7 +87,7 @@ Muchas de las observaciones corresponden a un grupo de varios individuos. Trabaj
 ## Distribucion de las nacionalidades de los visitantes
 
 ```{r}
-#| fig-cap: "Cantidad de ingresos por nacionalidad del ingresante"
+#| table-cap: "Cantidad de ingresos por nacionalidad del ingresante"
 
 receptivo |> 
   select(IdNacionalidad, Pais) |> 
@@ -97,7 +95,7 @@ receptivo |>
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |> 
   ungroup() |> 
-  gt()
+  kable(caption = "Cantidad de ingresos por nacionalidad del ingresante")
 
 ```
 
@@ -169,14 +167,13 @@ Observamos que en general las personas ingresantes al país con nacionalidades e
 Para prever como podría comportarse el gasto en alojamiento, podemos ver cuales son las opciones de este más usuales entre los ingresantes. Para esto se genera la siguiente tabla:
 
 ```{r}
-#| fig-cap: "Cantidad de observaciones por alojamiento"
+#| table-cap: "Cantidad de observaciones por alojamiento"
 
-## Cantidad de observaciones por alojamiento
 receptivo |> 
   group_by(Alojamiento) |> 
   summarise(cant. = n()) |> 
   arrange(desc(cant.)) |>
-  gt()
+  kable(caption = "Cantidad de observaciones por alojamiento")
 ```
 
 En la tabla 4 podemos ver que la forma de alojamiento que es mas usual entre los visitantes es la vivienda de familiares/amigos que son residentes en el país, por lo que podemos asumir que estas personas gastaran poco o nada en alojamiento?, veamoslo 
@@ -203,15 +200,13 @@ De igual forma que el gasto en alojamiento esta directamente relacionado con que
 Para visualizar como podría comportarse el gasto en transporte, realizamos una tabla en donde vemos cual es el mas usualmente usado entre los ingresantes. 
 
 ```{r}
-#| fig-cap: "Cantidad de observaciones por transporte utilizado locamente"
-
-## Cantidad de observaciones por alojamiento
+#| table-cap: "Cantidad de observaciones por transporte utilizado localmente"
 
 receptivo |> 
   group_by(TransporteLocal) |> 
   summarise(cant. = n()) |> 
   arrange(desc(cant.))  |>
-  gt()
+  kable(caption = "Cantidad de observaciones por transporte utilizado localmente")
 ```
 De esta forma en la tabla 5 podemos ver que gran parte de los ingresantes utiliza auto propio para movilizarse dentro del país. Pero esto significa que el gasto en transporte es 0, o se toma en cuesta el gasto en gasolina, si el auto necesitaría alguna reparación en el viaje, entre otros factores?.
 Para responder esta pregunta realizamos el siguiente gráfico 
@@ -377,10 +372,10 @@ receptivo_fecha |>
 ```
 
 ```{r}
-#| fig-cap: "Algunas nuevas columnas de gastos por persona"
+#| table-cap: "Algunas nuevas columnas de gastos por persona"
 
 receptivo_fecha[50:60, 55:60]  |>
-  gt()
+  kable(caption = "Algunas nuevas columnas de gastos por persona")
 ```
 
 # ¿Como cumplir con el objetivo?
