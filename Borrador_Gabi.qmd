@@ -5,6 +5,7 @@ format: pdf
 
 
 ```{r}
+library(xfun)
 library(tidyverse)
 library(here)
 library(readxl)
@@ -57,6 +58,19 @@ receptivo_fecha |>
   )) |> 
   relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoTotal_porPersona_Dia, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlojamiento_porPersona_Dia, GastoAlimentacion, GastoAlimentacion_porPersona, GastoAlimentacion_porPersona_Dia, GastoTransporte, GastoTransporte_porPersona, GastoTransporte_porPersona_Dia, GastoCultural, GastoCultural_porPersona, GastoCultural_porPersona_Dia, GastoTours, GastoTours_porPersona, GastoTours_porPersona_Dia, GastoCompras, GastoCompras_porPersona, GastoCompras_porPersona_Dia, GastoOtros, GastoOtros_porPersona, GastoOtros_porPersona_Dia, Coef:CoefTot)
 
+receptivo_fecha_dia <- 
+  receptivo_fecha_dia |> 
+  mutate(
+    Motivo_otr = case_when(
+      Motivo == "Estudios" ~ "Otros",
+      Motivo == "Salud / wellness" ~ "Otros",
+      Motivo == "Compras" ~ "Otros",
+      Motivo == "Religioso" ~ "Otros",
+      Motivo == "MICE" ~ "Otros",
+      .default = Motivo
+    ),
+    .after = "Motivo"
+  )
 ```
 
 ```{r}
@@ -327,47 +341,6 @@ receptivo_fecha_dia |>
 ```
 
 
-### Distribución del gasto segun el Estudio (los que tenemos más datos)
-
-```{r}
-install.packages("ggridges")
-library(ggridges)
-```
-
-```{r}
-receptivo_fecha_dia |> 
-  filter(GastoTotal_porPersona_Dia < 300 & Estudio %in% c("Primaria completa", "Secundaria completa", "Secundaria incompleta", "Terciaria completa", "Terciaria incompleta")) |> 
-  ggplot(aes(
-    x = GastoTotal_porPersona_Dia, 
-    y = Estudio, 
-    fill = Estudio
-    )) +
-  geom_density_ridges() +
-  theme_ridges() + 
-  theme(legend.position = "none")
-```
-
-
-### Distribución del gasto segun el motivo
-
-```{r}
-library(viridis)
-```
-
-
-```{r}
-receptivo_fecha_dia |> 
-  filter(GastoTotal_porPersona_Dia < 350 & Motivo %in% c("Ocio y vacaciones", "Visita a familiares y amigos" , "Trabajo / Profesional", "Transito", "Segunda Residencia")) |> 
-  ggplot(aes(
-    x = GastoTotal_porPersona_Dia, 
-    y = Motivo, 
-    fill = Motivo
-    )) +
-  geom_density_ridges() +
-  theme_ridges() + 
-  theme(legend.position = "none")
-```
-
 ```{r}
 receptivo_fecha_dia |> 
   select(
@@ -600,13 +573,24 @@ receptivo_fecha_dia <-
 
 ```{r}
 receptivo_fecha_dia |> 
-  group_by(Motivo_otr) |> 
+  group_by(Motivo, Motivo_otr) |> 
   summarise(n. = n()) |> 
   arrange(desc(n.))
 ```
 
 
 ```{r}
+ggplot(receptivo_fecha_dia) +
+  geom_bar(aes(x = fct_rev(fct_infreq(Motivo_otr)), fill = Motivo_otr)) +
+  coord_flip()+
+  labs(x = "Motivo",
+       y = "Cantidad")
+```
+
+
+```{r}
+library(See)
+
 receptivo_fecha_dia |>
   filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
   group_by(Motivo_otr, Pais) |>
@@ -621,11 +605,94 @@ ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
     labs(x = "Nacionalidad", 
          y = "Proporción acumulada") +
     scale_y_continuous(labels = scales::percent) +
-    theme_minimal() 
+    theme_minimal() +
+    scale_fill_oi(palette = "full")
+```
+
+### Interesante: Distribución del gasto segun el motivo
+
+```{r}
+library(viridis)
+```
+
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(GastoTotal_porPersona_Dia < 350) |> 
+  ggplot(aes(
+    x = GastoTotal_porPersona_Dia, 
+    y = Motivo_otr, 
+    fill = Motivo_otr
+    )) +
+  geom_density_ridges() +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Paired")
+```
+
+### Interesante: Distribución del gasto segun el Estudio (los que tenemos más datos)
+
+```{r}
+install.packages("ggridges")
+```
+
+```{r}
+library(ggridges)
+
+receptivo_fecha_dia |> 
+  filter(GastoTotal_porPersona_Dia < 300 & Estudio %in% c("Primaria completa", "Secundaria completa", "Secundaria incompleta", "Terciaria completa", "Terciaria incompleta")) |> 
+  ggplot(aes(
+    x = GastoTotal_porPersona_Dia, 
+    y = Estudio, 
+    fill = Estudio
+    )) +
+  geom_density_ridges() +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette = "Dark2")
 ```
 
 
 
+
+```{r}
+receptivo_fecha_dia |>
+  filter(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79)) |>
+  group_by(Motivo_otr, Pais) |>
+  summarise(cantidad = n()) |>
+  arrange(desc(cantidad)) |>
+  mutate(proporcion = cantidad / sum(cantidad),
+         acumulado = cumsum(proporcion)) |> 
+
+ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
+  geom_col(position = "fill") +
+  coord_flip() +
+  labs(x = "Nacionalidad",
+       y = "Proporción acumulada") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()
+```
+
+Mucho 'Otros' desde Japón:
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(Pais == "Japon") |> 
+  group_by(Motivo) |> 
+  summarise(count. = n())
+```
+Es porque hay muy pocas observaciones desde japón, entonces al colapsar los motivos en otros se acumulan y parecen más.
+
+
+
+Mucho 'Segunda Residencia' desde Suecia: ???
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(Pais == "Suecia") |> 
+  group_by(Motivo) |> 
+  summarise(count. = n())
+```
 
 
 
