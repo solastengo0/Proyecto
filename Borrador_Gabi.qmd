@@ -787,14 +787,16 @@ mapa <- latam.maps |> left_join(reg, by = join_by(region))
 
 ggplot(mapa, aes(x = long, y = lat)) +
 geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
-  scale_fill_viridis_c(option = "D")
+  scale_fill_viridis_c(option = "D") +
+geom_path(aes(group = group), linewidth = 1/10)
 ```
 
 #### Interactivo
 ```{r}
 mp <- ggplot(mapa, aes(x = long, y = lat)) +
 geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
-  scale_fill_viridis_c(option = "D")
+  scale_fill_viridis_c(option = "D") +
+geom_path(aes(group = group), linewidth = 1/10)
 
 ggplotly(mp)
 ```
@@ -825,9 +827,18 @@ mapa2 <- mundo.maps |> left_join(reg2, by = join_by(region))
 ```{r}
 ggplot(mapa2, aes(x = long, y = lat)) +
 geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
-  scale_fill_viridis_c(option = "D")
+  scale_fill_viridis_c(option = "D")  +
+geom_path(aes(group = group), linewidth = 1/10)
 ```
 
+```{r}
+mp2 <- ggplot(mapa2, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D")  +
+geom_path(aes(group = group), linewidth = 1/10)
+
+ggplotly(mp2)
+```
 
 
 
