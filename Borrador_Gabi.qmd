@@ -777,7 +777,7 @@ latam <- receptivo_fecha_dia |>
       .default = Pais
   ))
 
-latam.maps <- map_data("world", region = c(latam$Pais, "USA", "Panama", "Nicaragua", "Guatemala", "Costa Rica", "Honduras"
+latam.maps <- map_data("world", region = c(latam$Pais, "USA", "Panama", "Nicaragua", "Guatemala", "Costa Rica", "Honduras", "Guyana", "Suriname","French Guiana"
 ))
 
 latam.maps <- latam.maps |> 
@@ -790,6 +790,9 @@ latam.maps <- latam.maps |>
       region == "Guatemala" ~ "Resto de America",
       region == "Costa Rica" ~ "Resto de America",
       region == "Honduras" ~ "Resto de America",
+      region == "Guyana" ~ "Resto de America",
+      region == "Suriname" ~ "Resto de America",
+      region == "French Guiana" ~ "Resto de America",
       .default = region
   ))
 
