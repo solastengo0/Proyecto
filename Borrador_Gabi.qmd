@@ -5,7 +5,6 @@ format: pdf
 
 
 ```{r}
-library(xfun)
 library(tidyverse)
 library(here)
 library(readxl)
@@ -582,14 +581,16 @@ receptivo_fecha_dia |>
 ```{r}
 ggplot(receptivo_fecha_dia) +
   geom_bar(aes(x = fct_rev(fct_infreq(Motivo_otr)), fill = Motivo_otr)) +
-  coord_flip()+
+  coord_flip() +
   labs(x = "Motivo",
-       y = "Cantidad")
+       y = "Cantidad") +
+  theme_minimal() +
+    scale_fill_okabeito(order = c(1:3, 5:7))
 ```
 
 
 ```{r}
-library(See)
+library(see)
 
 receptivo_fecha_dia |>
   filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
@@ -600,19 +601,44 @@ receptivo_fecha_dia |>
          acumulado = cumsum(proporcion)) |> 
 
 ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
-    geom_col(position = "fill") +
+    geom_col(position = "fill", color = "grey8") +
     coord_flip() +
     labs(x = "Nacionalidad", 
          y = "Proporción acumulada") +
     scale_y_continuous(labels = scales::percent) +
     theme_minimal() +
-    scale_fill_oi(palette = "full")
+    scale_fill_okabeito(order = c(1:3, 5:7))
 ```
 
-### Interesante: Distribución del gasto segun el motivo
+### Interactivo:
+```{r}
+library(plotly)
+
+gr1 <- receptivo_fecha_dia |>
+  filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
+  group_by(Motivo_otr, Pais) |>
+  summarise(cantidad = n()) |>
+  arrange(desc(cantidad)) |> 
+  mutate(proporcion = cantidad / sum(cantidad),
+         acumulado = cumsum(proporcion)) |> 
+ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
+    geom_col(position = "fill", color = "grey8") +
+    coord_flip() +
+    labs(x = "Nacionalidad", 
+         y = "Proporción acumulada") +
+    scale_y_continuous(labels = scales::percent) +
+    theme_minimal() +
+    scale_fill_okabeito(order = c(1:3, 5:7))
+
+ggplotly(gr1)
+```
+
+
+### Interesante: Distribución del gasto segun el motivo XX
 
 ```{r}
 library(viridis)
+library(ggridges)
 ```
 
 
@@ -627,7 +653,7 @@ receptivo_fecha_dia |>
   geom_density_ridges() +
   theme_minimal() + 
   theme(legend.position = "none") +
-  scale_fill_brewer(palette = "Paired")
+  scale_fill_okabeito()
 ```
 
 ### Interesante: Distribución del gasto segun el Estudio (los que tenemos más datos)
@@ -649,8 +675,9 @@ receptivo_fecha_dia |>
   geom_density_ridges() +
   theme_minimal() + 
   theme(legend.position = "none") +
-  scale_fill_brewer(palette = "Dark2")
+  scale_fill_okabeito()
 ```
+
 
 
 
