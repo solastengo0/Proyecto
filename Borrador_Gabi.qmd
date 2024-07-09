@@ -660,9 +660,19 @@ receptivo_fecha_dia %>% head()
 
 
 ```{r}
-subdatos <- receptivo_fecha_dia %>% 
+subdatos2 <- receptivo_fecha_dia %>% 
   select(Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente, GastoTotal:GastoOtros_porPersona_Dia
 )
+subdatos %>% head()
+```
+
+
+
+```{r}
+subdatos <- receptivo_fecha_dia %>% 
+  select(
+    Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente
+    )
 subdatos %>% head()
 ```
 
@@ -740,30 +750,23 @@ receptivo_fecha_dia |>
 latam <- receptivo_fecha_dia |>
   group_by(Pais) |> 
   filter(IdNacionalidad < 50) |> 
-  summarise(sum = sum(GastoTotal_porPersona_Dia)) |> 
-  arrange(desc(n)) |>
+  summarise(sum = sum(GastoTotal_porPersona_Dia)) |>
   filter(Pais != "Otro de America") |> 
   mutate(Pais = case_when(
       Pais == "Brasil" ~ "Brazil",
       .default = Pais
-  )) |> 
-  select(Pais) |> 
-  as.vector()
+  ))
 
 latam.maps <- map_data("world", region = c(latam$Pais, "USA", "Panama"))
 
-latam.maps <- latam.maps |> 
- mutate(long2 = mean(long), lat2 = mean(lat))
-
-
-ggplot(latam.maps, aes(x = long, y = lat)) +
-geom_polygon(aes( group = group, fill = region))
+latam.maps
 ```
+
 
 ### Sólo América
 
 ```{r}
-reg <- 
+latam.gasto <- 
 receptivo_fecha_dia |>
   group_by(Pais) |> 
   filter(IdNacionalidad < 50) |> 
@@ -778,14 +781,14 @@ receptivo_fecha_dia |>
   filter(Pais != "Resto de America") |>  
   rename(region = Pais)
 
-reg
+latam.gasto
 ```
 
 
 ```{r}
-mapa <- latam.maps |> left_join(reg, by = join_by(region))
+mapa.latam <- latam.maps |> left_join(latam.gasto, by = join_by(region))
 
-ggplot(mapa, aes(x = long, y = lat)) +
+ggplot(mapa.latam, aes(x = long, y = lat)) +
 geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
   scale_fill_viridis_c(option = "D") +
 geom_path(aes(group = group), linewidth = 1/10)
@@ -837,8 +840,26 @@ geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
   scale_fill_viridis_c(option = "D")  +
 geom_path(aes(group = group), linewidth = 1/10)
 
-ggplotly(mp2)
+ggplotly(mp2, tooltip = "fill")
 ```
+
+# IDEA: No era buena idea
+El mapa pintarlo:
+cada color sea el motivo predominante y
+la intensidad del color que sea el Gasto Medio Pers Dia (fill)
+
+```{r}
+mapa2 |> head()
+```
+
+```{r}
+receptivo_fecha_dia |>
+  group_by(Pais, Motivo_otr) |>
+  summarise(count. = n()) |> 
+  slice_max(count.)
+```
+
+No tiene mucho sentido porque estarían casi todos pintados del mismo color.
 
 
 
