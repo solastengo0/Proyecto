@@ -19,6 +19,7 @@ library(readxl)
 library(forcats)
 library(knitr)
 library(gt)
+library(ggmosaic)
 ```
 
 # Introducción
@@ -396,6 +397,16 @@ Nos interesa saber como se distribuye el gasto total en el interior del país, c
 
 ## Otros gráficos
 Realizaremos una serie de gráficos en donde podremos visualizar como afectan simultáneamente dos o más variables al gasto total. 
+```{r}
+ggplot(data = receptivo_fecha) +
+  geom_mosaic(aes(x = product(Motivo, Pais), fill = GastoTotal_porPersona)) +
+  labs(title = 'Distribución de Gasto Total según Motivo y País',
+       x = 'Motivo y País',
+       y = 'Frecuencia',
+       fill = 'Gasto Total') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
 
 ## Arboles y Bosques
 A desarrollar...
