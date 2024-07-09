@@ -6,17 +6,70 @@ format: pdf
 
 ```{r}
 library(tidyverse)
-```
-
-
-```{r}
 library(here)
 library(readxl)
 
 receptivo <- read_excel(here::here(
   "data/receptivo.xlsx"
   ))
-View(receptivo)
+
+receptivo_fecha <-
+  receptivo |> 
+  separate(
+    col = FechaIngreso,
+    into = c("anio_I", "mes_I", "dia_I"),
+    convert = TRUE
+  )
+
+# Separo FechaEgreso en anio, mes y día:
+receptivo_fecha <- 
+  receptivo_fecha |> 
+  separate(
+    col = FechaEgreso,
+    into = c("anio_E", "mes_E", "dia_E"),
+    convert = TRUE
+  )
+
+# Creo Variable aniomes:
+receptivo_fecha <- 
+  receptivo_fecha |>
+  mutate(
+    aniomes_I = anio_I*100 + mes_I,
+    aniomes_E = anio_E*100 + mes_E,
+    .before = anio_I
+    )
+
+receptivo_fecha <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = starts_with("Gasto"),
+    .fns = ~ round((.x/Gente), 2),
+    .names = "{.col}_porPersona"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlimentacion, GastoAlimentacion_porPersona, GastoTransporte, GastoTransporte_porPersona, GastoCultural, GastoCultural_porPersona, GastoTours, GastoTours_porPersona, GastoCompras, GastoCompras_porPersona, GastoOtros, GastoOtros_porPersona, Coef:CoefTot)
+
+receptivo_fecha_dia <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = ends_with("_porPersona"),
+    .fns = ~ round((.x/Estadia), 2),
+    .names = "{.col}_Dia"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoTotal_porPersona_Dia, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlojamiento_porPersona_Dia, GastoAlimentacion, GastoAlimentacion_porPersona, GastoAlimentacion_porPersona_Dia, GastoTransporte, GastoTransporte_porPersona, GastoTransporte_porPersona_Dia, GastoCultural, GastoCultural_porPersona, GastoCultural_porPersona_Dia, GastoTours, GastoTours_porPersona, GastoTours_porPersona_Dia, GastoCompras, GastoCompras_porPersona, GastoCompras_porPersona_Dia, GastoOtros, GastoOtros_porPersona, GastoOtros_porPersona_Dia, Coef:CoefTot)
+
+receptivo_fecha_dia <- 
+  receptivo_fecha_dia |> 
+  mutate(
+    Motivo_otr = case_when(
+      Motivo == "Estudios" ~ "Otros",
+      Motivo == "Salud / wellness" ~ "Otros",
+      Motivo == "Compras" ~ "Otros",
+      Motivo == "Religioso" ~ "Otros",
+      Motivo == "MICE" ~ "Otros",
+      .default = Motivo
+    ),
+    .after = "Motivo"
+  )
 ```
 
 ```{r}
@@ -24,7 +77,7 @@ View(receptivo)
 library(here)
 library(readxl)
 diccionario <- read_excel(here::here(
-  "Diccionario.xlsx"
+  "data/Diccionario.xlsx"
   ))
 
 ```
@@ -287,47 +340,6 @@ receptivo_fecha_dia |>
 ```
 
 
-### Distribución del gasto segun el Estudio (los que tenemos más datos)
-
-```{r}
-install.packages("ggridges")
-library(ggridges)
-```
-
-```{r}
-receptivo_fecha_dia |> 
-  filter(GastoTotal_porPersona_Dia < 300 & Estudio %in% c("Primaria completa", "Secundaria completa", "Secundaria incompleta", "Terciaria completa", "Terciaria incompleta")) |> 
-  ggplot(aes(
-    x = GastoTotal_porPersona_Dia, 
-    y = Estudio, 
-    fill = Estudio
-    )) +
-  geom_density_ridges() +
-  theme_ridges() + 
-  theme(legend.position = "none")
-```
-
-
-### Distribución del gasto segun el motivo
-
-```{r}
-library(viridis)
-```
-
-
-```{r}
-receptivo_fecha_dia |> 
-  filter(GastoTotal_porPersona_Dia < 350 & Motivo %in% c("Ocio y vacaciones", "Visita a familiares y amigos" , "Trabajo / Profesional", "Transito", "Segunda Residencia")) |> 
-  ggplot(aes(
-    x = GastoTotal_porPersona_Dia, 
-    y = Motivo, 
-    fill = Motivo
-    )) +
-  geom_density_ridges() +
-  theme_ridges() + 
-  theme(legend.position = "none")
-```
-
 ```{r}
 receptivo_fecha_dia |> 
   select(
@@ -421,6 +433,202 @@ ggplot(receptivo_fecha_dia) +
   ))
 ```
 
+## Agregar otra variable de Motivo en la que el valor 'Otro' incluye a:
+Estudios
+Salud / wellness			
+Compras			
+Religioso
+MICE
+
+```{r}
+receptivo_fecha_dia |> 
+  group_by(Motivo) |> 
+  summarise(n. = n()) |> 
+  arrange(desc(n.))
+```
+
+```{r}
+#Cantidad de 'Otros' que quiero:
+receptivo_fecha_dia |> 
+  group_by(Motivo) |> 
+  summarise(n. = n()) |> 
+  arrange(desc(n.)) |> 
+  filter(n. < 1000) |> 
+  summarise(sum(n.))
+```
+
+
+
+```{r}
+receptivo_fecha_dia <- 
+  receptivo_fecha_dia |> 
+  mutate(
+    Motivo_otr = case_when(
+      Motivo == "Estudios" ~ "Otros",
+      Motivo == "Salud / wellness" ~ "Otros",
+      Motivo == "Compras" ~ "Otros",
+      Motivo == "Religioso" ~ "Otros",
+      Motivo == "MICE" ~ "Otros",
+      .default = Motivo
+    ),
+    .after = "Motivo"
+  )
+```
+
+```{r}
+receptivo_fecha_dia |> 
+  group_by(Motivo, Motivo_otr) |> 
+  summarise(n. = n()) |> 
+  arrange(desc(n.))
+```
+
+
+```{r}
+ggplot(receptivo_fecha_dia) +
+  geom_bar(aes(x = fct_rev(fct_infreq(Motivo_otr)), fill = Motivo_otr)) +
+  coord_flip() +
+  labs(x = "Motivo",
+       y = "Cantidad") +
+  theme_minimal() +
+    scale_fill_okabeito(order = c(1:3, 5:7))
+```
+
+
+```{r}
+library(see)
+
+receptivo_fecha_dia |>
+  filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
+  group_by(Motivo_otr, Pais) |>
+  summarise(cantidad = n()) |>
+  arrange(desc(cantidad)) |> 
+  mutate(proporcion = cantidad / sum(cantidad),
+         acumulado = cumsum(proporcion)) |> 
+
+ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
+    geom_col(position = "fill", color = "grey8") +
+    coord_flip() +
+    labs(x = "Nacionalidad", 
+         y = "Proporción acumulada") +
+    scale_y_continuous(labels = scales::percent) +
+    theme_minimal() +
+    scale_fill_okabeito(order = c(1:3, 5:7))
+```
+
+### Interactivo:
+```{r}
+library(plotly)
+
+gr1 <- receptivo_fecha_dia |>
+  filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
+  group_by(Motivo_otr, Pais) |>
+  summarise(cantidad = n()) |>
+  arrange(desc(cantidad)) |> 
+  mutate(proporcion = cantidad / sum(cantidad),
+         acumulado = cumsum(proporcion)) |> 
+ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
+    geom_col(position = "fill", color = "grey8") +
+    coord_flip() +
+    labs(x = "Nacionalidad", 
+         y = "Proporción acumulada") +
+    scale_y_continuous(labels = scales::percent) +
+    theme_minimal() +
+    scale_fill_okabeito(order = c(1:3, 5:7))
+
+ggplotly(gr1)
+```
+
+
+### Interesante: Distribución del gasto segun el motivo XX
+
+```{r}
+library(viridis)
+library(ggridges)
+```
+
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(GastoTotal_porPersona_Dia < 350) |> 
+  ggplot(aes(
+    x = GastoTotal_porPersona_Dia, 
+    y = Motivo_otr, 
+    fill = Motivo_otr
+    )) +
+  geom_density_ridges() +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  scale_fill_okabeito()
+```
+
+### Interesante: Distribución del gasto segun el Estudio (los que tenemos más datos)
+
+```{r}
+install.packages("ggridges")
+```
+
+```{r}
+library(ggridges)
+
+receptivo_fecha_dia |> 
+  filter(GastoTotal_porPersona_Dia < 300 & Estudio %in% c("Primaria completa", "Secundaria completa", "Secundaria incompleta", "Terciaria completa", "Terciaria incompleta")) |> 
+  ggplot(aes(
+    x = GastoTotal_porPersona_Dia, 
+    y = Estudio, 
+    fill = Estudio
+    )) +
+  geom_density_ridges() +
+  theme_minimal() + 
+  theme(legend.position = "none") +
+  scale_fill_okabeito()
+```
+
+
+
+
+
+```{r}
+receptivo_fecha_dia |>
+  filter(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79)) |>
+  group_by(Motivo_otr, Pais) |>
+  summarise(cantidad = n()) |>
+  arrange(desc(cantidad)) |>
+  mutate(proporcion = cantidad / sum(cantidad),
+         acumulado = cumsum(proporcion)) |> 
+
+ggplot(aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
+  geom_col(position = "fill") +
+  coord_flip() +
+  labs(x = "Nacionalidad",
+       y = "Proporción acumulada") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()
+```
+
+Mucho 'Otros' desde Japón:
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(Pais == "Japon") |> 
+  group_by(Motivo) |> 
+  summarise(count. = n())
+```
+Es porque hay muy pocas observaciones desde japón, entonces al colapsar los motivos en otros se acumulan y parecen más.
+
+
+
+Mucho 'Segunda Residencia' desde Suecia: ???
+
+```{r}
+receptivo_fecha_dia |> 
+  filter(Pais == "Suecia") |> 
+  group_by(Motivo) |> 
+  summarise(count. = n())
+```
+
+
+
+## MODELO
 
 
 ```{r}
@@ -428,7 +636,10 @@ m2 <- lm(GastoTotal_porPersona_Dia ~ Estadia + GastoAlojamiento_porPersona_Dia +
 summary(m2)
 ```
 
+
 ```{r}
+library(kableExtra)
+
 dd <- data.frame(R2 = summary(m2)$r.squared, sigma=summary(m2)$sigma, AIC=AIC(m2))
 
 kable(dd)
@@ -443,22 +654,25 @@ ggplot( ) + geom_point(aes(x=fitted(m2), y=rstudent(m2) )) +
 ```
 
 
-
-```{r}
-receptivo_fecha_dia %>% 
-  
-```
-
-
 ```{r}
 receptivo_fecha_dia %>% head()
 ```
 
 
 ```{r}
-subdatos <- receptivo_fecha_dia %>% 
+subdatos2 <- receptivo_fecha_dia %>% 
   select(Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente, GastoTotal:GastoOtros_porPersona_Dia
 )
+subdatos %>% head()
+```
+
+
+
+```{r}
+subdatos <- receptivo_fecha_dia %>% 
+  select(
+    Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente
+    )
 subdatos %>% head()
 ```
 
@@ -513,6 +727,139 @@ training %>%
   select(Motivo) %>% levels()
 ```
 
+
+```{r}
+receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(n = n()) |> 
+  arrange(desc(n)) |>
+  filter(Pais != "Otro de America") |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      .default = Pais
+  )) |> 
+  select(Pais)
+```
+
+
+## Mapa
+
+
+```{r}
+latam <- receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(sum = sum(GastoTotal_porPersona_Dia)) |>
+  filter(Pais != "Otro de America") |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      .default = Pais
+  ))
+
+latam.maps <- map_data("world", region = c(latam$Pais, "USA", "Panama"))
+
+latam.maps
+```
+
+
+### Sólo América
+
+```{r}
+latam.gasto <- 
+receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(Gasto_Medio_Pers_Dia = mean(GastoTotal_porPersona_Dia),
+            sd_GMPD = sd(GastoTotal_porPersona_Dia)) |> 
+  arrange(desc(Gasto_Medio_Pers_Dia)) |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      Pais == "Otro de America" ~ "Resto de America",
+      .default = Pais
+  )) |> 
+  filter(Pais != "Resto de America") |>  
+  rename(region = Pais)
+
+latam.gasto
+```
+
+
+```{r}
+mapa.latam <- latam.maps |> left_join(latam.gasto, by = join_by(region))
+
+ggplot(mapa.latam, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D") +
+geom_path(aes(group = group), linewidth = 1/10)
+```
+
+#### Interactivo
+```{r}
+mp <- ggplot(mapa, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D") +
+geom_path(aes(group = group), linewidth = 1/10)
+
+ggplotly(mp)
+```
+
+### Todo mundo
+
+```{r}
+reg2 <- 
+receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  summarise(Gasto_Medio_Pers_Dia = mean(GastoTotal_porPersona_Dia),
+            sd_GMPD = sd(GastoTotal_porPersona_Dia)) |> 
+  arrange(desc(Gasto_Medio_Pers_Dia)) |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      Pais == "Otro de America" ~ "Resto de America",
+      Pais == "EE.UU." ~ "USA",
+      .default = Pais
+  )) |> 
+  filter(Pais != "Resto de America" & Pais != "Otro de Europa" & Pais != "Africa u Oceania") |>  
+  rename(region = Pais)
+
+mundo.maps <- map_data("world", region = reg2$region)
+
+mapa2 <- mundo.maps |> left_join(reg2, by = join_by(region))
+```
+
+```{r}
+ggplot(mapa2, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D")  +
+geom_path(aes(group = group), linewidth = 1/10)
+```
+
+```{r}
+mp2 <- ggplot(mapa2, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D")  +
+geom_path(aes(group = group), linewidth = 1/10)
+
+ggplotly(mp2, tooltip = "fill")
+```
+
+# IDEA: No era buena idea
+El mapa pintarlo:
+cada color sea el motivo predominante y
+la intensidad del color que sea el Gasto Medio Pers Dia (fill)
+
+```{r}
+mapa2 |> head()
+```
+
+```{r}
+receptivo_fecha_dia |>
+  group_by(Pais, Motivo_otr) |>
+  summarise(count. = n()) |> 
+  slice_max(count.)
+```
+
+No tiene mucho sentido porque estarían casi todos pintados del mismo color.
 
 
 
