@@ -433,101 +433,6 @@ ggplot(receptivo_fecha_dia) +
   ))
 ```
 
-
-
-```{r}
-m2 <- lm(GastoTotal_porPersona_Dia ~ Estadia + GastoAlojamiento_porPersona_Dia + GastoTransporte_porPersona_Dia, data= receptivo_fecha_dia)
-summary(m2)
-```
-
-```{r}
-library(kableExtra)
-
-dd <- data.frame(R2 = summary(m2)$r.squared, sigma=summary(m2)$sigma, AIC=AIC(m2))
-
-kable(dd)
-```
-
-
-```{r}
-ggplot( ) + geom_point(aes(x=fitted(m2), y=rstudent(m2) )) +
- labs(title='Residuos vs Predicciones',
- x=expression( hat(y[i])) , y = expression(e[i]/SE(e[i])) ) +
- theme(aspect.ratio = 1)
-```
-
-
-
-```{r}
-receptivo_fecha_dia %>% 
-  
-```
-
-
-```{r}
-receptivo_fecha_dia %>% head()
-```
-
-
-```{r}
-subdatos <- receptivo_fecha_dia %>% 
-  select(Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente, GastoTotal:GastoOtros_porPersona_Dia
-)
-subdatos %>% head()
-```
-
-
-```{r}
-library(here)
-library(tidyverse)
-library(randomForest)
-library(modelr)
-#separo training y test
-intrain <- sample(
-  x = 1:nrow(subdatos), 
-  size = nrow(subdatos)*.7)
-
-training <- subdatos[intrain,]
-
-testing <- subdatos[-intrain,]
-# ajustamos modelo lineal simple
-rf <- randomForest(GastoTotal_porPersona_Dia~ .,data= training, na.action=na.omit)
-#raiz cuadrada del error cuadr´atico medio
-rmse(rf, testing)
-## [1] 3.370582
-```
-
-```{r}
-library(ranger)
-```
-
-```{r}
-library(here)
-library(tidyverse)
-library(randomForest)
-library(modelr)
-#separo training y test
-intrain <- sample(
-  x = 1:nrow(subdatos), 
-  size = nrow(subdatos)*.5)
-
-training <- subdatos[intrain,]
-
-testing <- subdatos[-intrain,]
-# ajustamos modelo lineal simple
-rf <- ranger(GastoTotal_porPersona_Dia~ ., data= training, na.action=na.omit)
-#raiz cuadrada del error cuadr´atico medio
-rmse(rf, testing)
-```
-
-
-
-```{r}
-training %>% 
-  select(Motivo) %>% levels()
-```
-
-
 ## Agregar otra variable de Motivo en la que el valor 'Otro' incluye a:
 Estudios
 Salud / wellness			
@@ -723,12 +628,161 @@ receptivo_fecha_dia |>
 
 
 
+## MODELO
+
+
+```{r}
+m2 <- lm(GastoTotal_porPersona_Dia ~ Estadia + GastoAlojamiento_porPersona_Dia + GastoTransporte_porPersona_Dia, data= receptivo_fecha_dia)
+summary(m2)
+```
+
+
+```{r}
+library(kableExtra)
+
+dd <- data.frame(R2 = summary(m2)$r.squared, sigma=summary(m2)$sigma, AIC=AIC(m2))
+
+kable(dd)
+```
+
+
+```{r}
+ggplot( ) + geom_point(aes(x=fitted(m2), y=rstudent(m2) )) +
+ labs(title='Residuos vs Predicciones',
+ x=expression( hat(y[i])) , y = expression(e[i]/SE(e[i])) ) +
+ theme(aspect.ratio = 1)
+```
+
+
+```{r}
+receptivo_fecha_dia %>% head()
+```
+
+
+```{r}
+subdatos <- receptivo_fecha_dia %>% 
+  select(Pais, Motivo, Estudio, Localidad, Departamento, Alojamiento, Estadia, Gente, GastoTotal:GastoOtros_porPersona_Dia
+)
+subdatos %>% head()
+```
+
+
+```{r}
+library(here)
+library(tidyverse)
+library(randomForest)
+library(modelr)
+#separo training y test
+intrain <- sample(
+  x = 1:nrow(subdatos), 
+  size = nrow(subdatos)*.7)
+
+training <- subdatos[intrain,]
+
+testing <- subdatos[-intrain,]
+# ajustamos modelo lineal simple
+rf <- randomForest(GastoTotal_porPersona_Dia~ .,data= training, na.action=na.omit)
+#raiz cuadrada del error cuadr´atico medio
+rmse(rf, testing)
+## [1] 3.370582
+```
+
+```{r}
+library(ranger)
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(randomForest)
+library(modelr)
+#separo training y test
+intrain <- sample(
+  x = 1:nrow(subdatos), 
+  size = nrow(subdatos)*.5)
+
+training <- subdatos[intrain,]
+
+testing <- subdatos[-intrain,]
+# ajustamos modelo lineal simple
+rf <- ranger(GastoTotal_porPersona_Dia~ ., data= training, na.action=na.omit)
+#raiz cuadrada del error cuadr´atico medio
+rmse(rf, testing)
+```
 
 
 
+```{r}
+training %>% 
+  select(Motivo) %>% levels()
+```
 
 
+```{r}
+receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(n = n()) |> 
+  arrange(desc(n)) |>
+  filter(Pais != "Otro de America") |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      .default = Pais
+  )) |> 
+  select(Pais)
+```
 
+
+## Mapa
+
+
+```{r}
+latam <- receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(sum = sum(GastoTotal_porPersona_Dia)) |> 
+  arrange(desc(n)) |>
+  filter(Pais != "Otro de America") |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      .default = Pais
+  )) |> 
+  select(Pais) |> 
+  as.vector()
+
+latam.maps <- map_data("world", region = c(latam$Pais, "USA", "Panama"))
+
+latam.maps <- latam.maps |> 
+ mutate(long2 = mean(long), lat2 = mean(lat))
+
+
+ggplot(latam.maps, aes(x = long, y = lat)) +
+geom_polygon(aes( group = group, fill = region))
+```
+
+```{r}
+latam.maps <- map_data("world", region = latam$Pais)
+latam.maps |> group_by(region) |> summarise(coun. = n())
+
+ggplot(latam.maps, aes(x = long, y = lat)) +
+geom_polygon(aes( group = group, fill = region))
+```
+
+
+```{r}
+receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(Gasto_Medio_Pers_Dia = mean(GastoTotal_porPersona_Dia),
+            sd_GMPD = sd(GastoTotal_porPersona_Dia)) |> 
+  arrange(desc(Gasto_Medio_Pers_Dia)) |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      Pais == "Otro de America" ~ "Resto de America"
+      .default = Pais
+  )) |> 
+  rename()
+```
 
 
 
