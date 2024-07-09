@@ -760,16 +760,10 @@ ggplot(latam.maps, aes(x = long, y = lat)) +
 geom_polygon(aes( group = group, fill = region))
 ```
 
-```{r}
-latam.maps <- map_data("world", region = latam$Pais)
-latam.maps |> group_by(region) |> summarise(coun. = n())
-
-ggplot(latam.maps, aes(x = long, y = lat)) +
-geom_polygon(aes( group = group, fill = region))
-```
-
+### Sólo América
 
 ```{r}
+reg <- 
 receptivo_fecha_dia |>
   group_by(Pais) |> 
   filter(IdNacionalidad < 50) |> 
@@ -778,11 +772,62 @@ receptivo_fecha_dia |>
   arrange(desc(Gasto_Medio_Pers_Dia)) |> 
   mutate(Pais = case_when(
       Pais == "Brasil" ~ "Brazil",
-      Pais == "Otro de America" ~ "Resto de America"
+      Pais == "Otro de America" ~ "Resto de America",
       .default = Pais
   )) |> 
-  rename()
+  filter(Pais != "Resto de America") |>  
+  rename(region = Pais)
+
+reg
 ```
+
+
+```{r}
+mapa <- latam.maps |> left_join(reg, by = join_by(region))
+
+ggplot(mapa, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D")
+```
+
+#### Interactivo
+```{r}
+mp <- ggplot(mapa, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D")
+
+ggplotly(mp)
+```
+
+### Todo mundo
+
+```{r}
+reg2 <- 
+receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  summarise(Gasto_Medio_Pers_Dia = mean(GastoTotal_porPersona_Dia),
+            sd_GMPD = sd(GastoTotal_porPersona_Dia)) |> 
+  arrange(desc(Gasto_Medio_Pers_Dia)) |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      Pais == "Otro de America" ~ "Resto de America",
+      Pais == "EE.UU." ~ "USA",
+      .default = Pais
+  )) |> 
+  filter(Pais != "Resto de America" & Pais != "Otro de Europa" & Pais != "Africa u Oceania") |>  
+  rename(region = Pais)
+
+mundo.maps <- map_data("world", region = reg2$region)
+
+mapa2 <- mundo.maps |> left_join(reg2, by = join_by(region))
+```
+
+```{r}
+ggplot(mapa2, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D")
+```
+
 
 
 
