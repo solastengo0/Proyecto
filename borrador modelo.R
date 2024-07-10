@@ -96,10 +96,12 @@ cat("EMC Árbol de Regresión: ", emc_arbolb, "\n")
 cat("EMC Bosque Aleatorio: ", emc_bosqueb, "\n")
 
 
+##ejemplo
 
+prueba <- data.frame(Motivo = "Ocio y vacaciones", Estudio = "Secundaria completa", Alojamiento = "Vivienda arrendada", Ocupacion = "Estudiante", TransporteLocal = "Taxi - Bus")
+arbol_predictp <- predict(arbol, newdata = prueba)
 
-
-
+print(arbol_predictp)
 
 
 
