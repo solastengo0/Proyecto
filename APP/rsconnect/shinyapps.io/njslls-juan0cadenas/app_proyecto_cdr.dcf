@@ -1,0 +1,12 @@
+name: app_proyecto_cdr
+title: app_proyecto_cdr
+username: njslls-juan0cadenas
+account: njslls-juan0cadenas
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12306656
+bundleId: 8853004
+url: https://njslls-juan0cadenas.shinyapps.io/app_proyecto_cdr/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
