@@ -3,7 +3,7 @@ library(tidyverse)
 library(readxl)
 library(here)
 
-receptivo_fecha <- read_excel(here("data/receptivo_fecha.xlsx"))
+receptivo_fecha <- read_excel("receptivo_fecha.xlsx")
 
 columnas_gasto <- c("GastoAlojamiento_porPersona", "GastoAlimentacion_porPersona", 
                     "GastoTransporte_porPersona", "GastoCultural_porPersona", 
