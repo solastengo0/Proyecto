@@ -7,8 +7,8 @@ execute:
   warning: false
 lang: es
 fig-format: retina
-fig-height: 10
-fig-width: 8
+fig-height: 4
+fig-width: 6
 ---
 
 ```{r}
@@ -60,12 +60,29 @@ Buscamos a partir de las variables anteriormente nombradas, entender como influy
 Realizamos un análisis exploratorio de los datos, con el fin de familiarizarnos con ellos y entenderlos mejor.
 
 Entre los gráficos y tablas que generamos para visualizar los datos, destacamos los siguientes, que nos ayudan a darnos cuenta cuales serán las mejores formas para cumplir con nuestros objetivos;
+```{r}
+receptivo <- 
+  receptivo|> 
+  mutate(
+    Motivo_otr = case_when(
+      Motivo == "Estudios" ~ "Otros",
+      Motivo == "Salud / wellness" ~ "Otros",
+      Motivo == "Compras" ~ "Otros",
+      Motivo == "Religioso" ~ "Otros",
+      Motivo == "MICE" ~ "Otros",
+      .default = Motivo
+    ),
+    .after = "Motivo"
+  )
+```
 
 ```{r}
 #| fig-cap: "Distribución del motivo de ingreso"
+#| out.width: "70%"
+#| out-height: "70%"
 
 ggplot(receptivo) +
-  geom_bar(aes(x = fct_rev(fct_infreq(Motivo)), fill = Motivo)) +
+  geom_bar(aes(x = fct_rev(fct_infreq(Motivo_otr)), fill = Motivo_otr)) +
   coord_flip()+
   labs(x = "Motivo",
        y = "Cantidad")
@@ -80,7 +97,7 @@ receptivo |>
   arrange(desc(cant.)) |>
   kable(caption = "Distribución del MOTIVO de ingreso")
 ```
-
+Para la figura 1 generalizamos en algunas opciones del motivo del viaje, ya que contaban con pocas observaciones en comparacion a otras, las opciones "Estudios", "Salud", "Compras", "Religioso" y "MICE" comienzan a ser parte de la opcion "Otros".
 En un primer plano podemos apreciar que la gran mayoría de las personas que ingresan al país lo hacen exclusivamente por motivos recreativos y/o de índole social.
 
 Muchas de las observaciones corresponden a un grupo de varios individuos. Trabajamos bajo el supuesto de que todos los integrantes del grupo comparten nacionalidad así como los gastos refieren a la suma de los gastos de todo el grupo.
@@ -106,20 +123,22 @@ Suponemos que gran parte de los uruguayos que vuelven a pasar unos días es con 
 #| include: false
 datos <- receptivo |>
   filter(!(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79))) |>
-  group_by(Motivo, Pais) |>
+  group_by(Motivo_otr, Pais) |>
     summarise(cantidad = n()) |>
     arrange(desc(cantidad))
   
  datos <- datos |> 
-  group_by(Motivo) |>
+  group_by(Motivo_otr) |>
   mutate(proporcion = cantidad / sum(cantidad),
          acumulado = cumsum(proporcion))
 ```
 
 ```{r}
 #| fig-cap: "Distribución de motivos de visita según nacionalidad"
+#| out.width: "70%"
+#| out-height: "70%"
 
- ggplot(datos, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo)) +
+ ggplot(datos, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
     geom_col(position = "fill") +
     coord_flip() +
     labs(x = "Nacionalidad", 
@@ -138,20 +157,22 @@ En la figura 2 vemos únicamente la nacionalidad de los ingresantes americanos. 
 ## MOTIVO según NACIONALIDAD, sólo quienes ingresan desde afuera de américa
 datos2 <- receptivo |>
   filter(IdNacionalidad %in% c(51:57, 59, 61:63, 69, 79)) |>
-  group_by(Motivo, Pais) |>
+  group_by(Motivo_otr, Pais) |>
   summarise(cantidad = n()) |>
   arrange(desc(cantidad))
   
 datos2 <- datos2 |>
-  group_by(Motivo) |>
+  group_by(Motivo_otr) |>
   mutate(proporcion = cantidad / sum(cantidad),
          acumulado = cumsum(proporcion))
 ```
 
 ```{r}
 #| fig-cap: "Distribución de motivos de visita según nacionalidad"
+#| out.width: "70%"
+#| out-height: "70%"
 
-ggplot(datos2, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo)) +
+ggplot(datos2, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
   geom_col(position = "fill") +
   coord_flip() +
   labs(x = "Nacionalidad",
@@ -180,6 +201,8 @@ receptivo |>
 En la tabla 4 podemos ver que la forma de alojamiento que es mas usual entre los visitantes es la vivienda de familiares/amigos que son residentes en el país, por lo que podemos asumir que estas personas gastaran poco o nada en alojamiento?, veamoslo 
 ```{r}
 #| fig-cap: "Gasto en alojamiento según alojamiento"
+#| out.width: "70%"
+#| out-height: "70%"
 
 receptivo %>% 
   group_by(Alojamiento) %>% 
@@ -214,6 +237,8 @@ Para responder esta pregunta realizamos el siguiente gráfico
 
 ```{r}
 #| fig-cap: "Gasto en transporte según transporte local"
+#| out.width: "70%"
+#| out-height: "70%"
 
 receptivo %>% 
   ggplot(aes(y = TransporteLocal, x = GastoTransporte)) +
@@ -481,6 +506,8 @@ latam.gasto
 
 ```{r}
 #| fig-cap: "Mapa de América Latina: Gasto Promedio por Persona por Dia."
+#| out.width: "100%"
+#| out-height: "100%"
 
 mapa.latam <- latam.maps |> left_join(latam.gasto, by = join_by(region))
 
@@ -499,7 +526,84 @@ En el grafico se logra visualizar que al parecer las personas con nacionalidad m
 
 
 ## Otros gráficos
-Realizaremos una serie de gráficos en donde podremos visualizar como afectan simultáneamente dos o más variables al gasto total. 
+Para intentar explicar el porque las personas con nacionalidades mexicanas gastan mas cuando ingresan al pais podemos ver un grafico que compara el gasto medio por persona por dia, en caso de nacionalidad Mexicana y Uruguaya segun el motivo, dejando solo los motivos con mayores observaciones para una mejor visualizacion de los datos.
+```{r}
+#| fig-cap: "Comparacion Mexico-Uruguay, en gasto segun motivo"
+#| out.width: "70%"
+#| out-height: "70%"
+
+library(ggmosaic)
+
+receptivo_fecha_dia |> 
+  filter(Pais %in% c("Mexico", "Uruguay") & Motivo %in% c("Ocio y vacaciones", "Visita a familiares y amigos" , "Trabajo / Profesional", "Segunda Residencia")) |> 
+ggplot() +
+ geom_mosaic(aes(x = product(Motivo, Pais), fill= Motivo))
+```
+Ahora podemos hacer otro grafico para ver en que se diferencian los gastos de los turistas mexicanos a los de los uruguayos.
+
+```{r}
+#| fig-cap: "Comparación de gasto por área para personas mexicanas"
+#| include: false
+
+datos_mexico <- receptivo_fecha_dia %>% filter(Pais == "Mexico")
+
+datos_largos <- datos_mexico %>%
+  gather(key = "TipoGasto", value = "Gasto", 
+         GastoAlojamiento_porPersona_Dia, 
+         GastoAlimentacion_porPersona_Dia, 
+         GastoCompras_porPersona_Dia, 
+         GastoTransporte_porPersona_Dia)
+
+datos_largos$TipoGasto <- factor(datos_largos$TipoGasto, 
+                                 levels = c("GastoAlojamiento_porPersona_Dia", 
+                                            "GastoAlimentacion_porPersona_Dia", 
+                                            "GastoCompras_porPersona_Dia", 
+                                            "GastoTransporte_porPersona_Dia"),
+                                 labels = c("Gasto Alojamiento", 
+                                            "Gasto Alimentacion", 
+                                            "Gasto Compras", 
+                                            "Gasto Transporte"))
+
+ggplot(data = datos_largos) +
+  geom_mosaic(aes(weight = Gasto, x = product(Motivo), fill = TipoGasto), na.rm = TRUE) +
+  labs(x = "Motivo", y = "Gasto", fill = "Tipo de Gasto") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+#| fig-cap: "Comparación de los tipos de gastos por persona por día entre turistas mexicanos y uruguayos."
+#| out.width: "70%"
+#| out-height: "70%"
+
+datos_mexico_uruguay <- receptivo_fecha_dia %>% 
+  filter(Pais %in% c("Mexico", "Uruguay"))
+
+datos_largos <- datos_mexico_uruguay %>%
+  gather(key = "TipoGasto", value = "Gasto", 
+         GastoAlojamiento_porPersona_Dia, 
+         GastoAlimentacion_porPersona_Dia, 
+         GastoCompras_porPersona_Dia, 
+         GastoTransporte_porPersona_Dia)
+
+datos_largos$TipoGasto <- factor(datos_largos$TipoGasto, 
+                                 levels = c("GastoAlojamiento_porPersona_Dia", 
+                                            "GastoAlimentacion_porPersona_Dia", 
+                                            "GastoCompras_porPersona_Dia", 
+                                            "GastoTransporte_porPersona_Dia"),
+                                 labels = c("Gasto Alojamiento", 
+                                            "Gasto Alimentacion", 
+                                            "Gasto Compras", 
+                                            "Gasto Transporte"))
+
+
+ggplot(data = datos_largos) +
+  geom_mosaic(aes(weight = Gasto, x = product(Pais), fill = TipoGasto), na.rm = TRUE) +
+  labs(x = "País", y = "Gasto", fill = "Tipo de Gasto") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Viendo en conjunto la figura 7 y 8, nos damos cuenta de una clara diferencia en el motivo del viaje, los mexicanos ingresan al pais mayormente con el fin de vacacionar, en cambio los uruguayos lo hacen para visitar a sus familiares y amigos. Tambien vemos que en el caso de los mexicanos gastan más del doble en alojamiento de lo que gastan los uruguayos. Por lo tanto podriamos conlcuir que el motivo por el que los ingresantes con nacionalidad mexicana sean los que mas gastan en el pais de toda america, es que entran al pais por ocio y vacaciones y gastan mucho en alojamiento.
+
+
 ```{r}
 #| include: false
 
