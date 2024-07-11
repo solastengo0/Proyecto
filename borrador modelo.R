@@ -10,7 +10,7 @@ library(rpart)
 library(mice)
 
 datos <- read_excel(here("data","receptivo_fecha.xlsx"))
-datos$GastoTotal_porPersona = datos$GastoTotal
+
 
 variablesElegidas <- c("GastoTotal_porPersona", "Motivo", "Estudio", "Alojamiento", "Ocupacion", "TransporteLocal")
 datos2 <- datos[variablesElegidas]
