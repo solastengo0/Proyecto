@@ -395,18 +395,122 @@ Para permitir una visualización interactiva de cómo los visitantes gastan en d
 ## Mapa de Uruguay
 Nos interesa saber como se distribuye el gasto total en el interior del país, contamos con la variable "Departamento" que como anteriormente se visualiza en la tabla 1, nos indica cual es el país de destino del visitante, supondremos que allí se efectuarán la mayoría de los gastos y de esa forma generaremos un mapa que marcará con colores mas oscuros los departamentos en donde se producirá mayor gasto por los ingresantes.
 
+```{r}
+#| include: false
+
+## Generamos un nuevo data frame con variables de gastos por persona por dia, diviendo los gatos por persona por la estadía
+
+receptivo_fecha_dia <- 
+receptivo_fecha |> 
+  mutate(across(
+    .cols = ends_with("_porPersona"),
+    .fns = ~ round((.x/Estadia), 2),
+    .names = "{.col}_Dia"
+  )) |> 
+  relocate(IdIngresos:Gente, GastoTotal, GastoTotal_porPersona, GastoTotal_porPersona_Dia, GastoAlojamiento, GastoAlojamiento_porPersona, GastoAlojamiento_porPersona_Dia, GastoAlimentacion, GastoAlimentacion_porPersona, GastoAlimentacion_porPersona_Dia, GastoTransporte, GastoTransporte_porPersona, GastoTransporte_porPersona_Dia, GastoCultural, GastoCultural_porPersona, GastoCultural_porPersona_Dia, GastoTours, GastoTours_porPersona, GastoTours_porPersona_Dia, GastoCompras, GastoCompras_porPersona, GastoCompras_porPersona_Dia, GastoOtros, GastoOtros_porPersona, GastoOtros_porPersona_Dia, Coef:CoefTot)
+```
+```{r}
+#| include: false
+latam <- receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(sum = sum(GastoTotal_porPersona_Dia)) |>
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      Pais == "Otro de America" ~ "Resto de America",
+      .default = Pais
+  ))
+
+latam.maps <- map_data("world", region = c(latam$Pais, "USA", "Panama", "Nicaragua", "Guatemala", "Costa Rica", "Honduras", "Guyana", "Suriname","French Guiana", "Dominican Republic", "Puerto Rico", "Haiti", "Jamaica"
+))
+
+latam.maps <- latam.maps |> 
+  mutate(region = case_when(
+      region == "Brasil" ~ "Brazil",
+      region == "Otro de America" ~ "Resto de America",
+      region == "USA" ~ "Resto de America",
+      region == "Panama" ~ "Resto de America",
+      region == "Nicaragua" ~ "Resto de America",
+      region == "Guatemala" ~ "Resto de America",
+      region == "Costa Rica" ~ "Resto de America",
+      region == "Honduras" ~ "Resto de America",
+      region == "Guyana" ~ "Resto de America",
+      region == "Suriname" ~ "Resto de America",
+      region == "French Guiana" ~ "Resto de America",
+      region == "Dominican Republic" ~ "Resto de America",
+      region == "Puerto Rico" ~ "Resto de America",
+      region == "Haiti" ~ "Resto de America",
+      region == "Jamaica" ~ "Resto de America",
+      .default = region
+  ))
+
+latam.maps|> group_by(region) |> summarise(n())
+```
+
+```{r}
+#| include: false
+latam.gasto <- 
+receptivo_fecha_dia |>
+  group_by(Pais) |> 
+  filter(IdNacionalidad < 50) |> 
+  summarise(Gasto_Medio_Pers_Dia = mean(GastoTotal_porPersona_Dia),
+            sd_GMPD = sd(GastoTotal_porPersona_Dia)) |> 
+  arrange(desc(Gasto_Medio_Pers_Dia)) |> 
+  mutate(Pais = case_when(
+      Pais == "Brasil" ~ "Brazil",
+      Pais == "Otro de America" ~ "Resto de America",
+      Pais == "USA" ~ "Resto de America",
+      Pais == "Panama" ~ "Resto de America",
+      Pais == "Nicaragua" ~ "Resto de America",
+      Pais == "Guatemala" ~ "Resto de America",
+      Pais == "Costa Rica" ~ "Resto de America",
+      Pais == "Honduras" ~ "Resto de America",
+      Pais == "Guyana" ~ "Resto de America",
+      Pais == "Suriname" ~ "Resto de America",
+      Pais == "French Guiana" ~ "Resto de America",
+      Pais == "Dominican Republic" ~ "Resto de America",
+      Pais == "Puerto Rico" ~ "Resto de America",
+      Pais == "Haiti" ~ "Resto de America",
+      Pais== "Jamaica" ~ "Resto de America",
+      .default = Pais
+  )) |>  
+  rename(region = Pais)
+
+latam.gasto
+```
+
+```{r}
+#| fig-cap: "Mapa de América Latina: Gasto Promedio por Persona por Dia."
+
+mapa.latam <- latam.maps |> left_join(latam.gasto, by = join_by(region))
+
+ggplot(mapa.latam, aes(x = long, y = lat)) +
+geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
+  scale_fill_viridis_c(option = "D") +
+geom_path(aes(group = group), linewidth = 1/10) + 
+  scale_x_continuous(limits = c(-180, -25)) + 
+  labs(fill = "Gasto medio por persona (por dia)")
+```
+
+Nos gustaría resaltar que para la creación de este mapa debimos generalizar un poco para una mejor visualizacion de los datos en el mapa, ya que no contamos con datos de algunos países.
+
+En la figura 6 podemos ver como se distribuye el gasto por persona por dia segun la nacionalidad de la persona que ingresa al país, tomando en cuenta solo las nacionalidades americanas, ya que sabemos que la mayor parte de los ingresantes son de tales nacionalidades. 
+En el grafico se logra visualizar que al parecer las personas con nacionalidad mexicana son las que mas gastan en el país cuando ingresan, y que el gasto promedio de las personas de nacionalidad uruguaya al ingresar al país es el más bajo, esto ultimo tiene sentido, ya que podemos ver en la shiny app que las personas uruguayas que ingresan gastan más que nada en alimentacion, por lo que podemos suponer que gastos como el alojamiento lo tienen mayormente cubiertos por familiares o amigos que visiten. En cambio es un poco raro que las personas que mas gasten sean exactamente las mexicanas, en la shiny app podemos ver que las personas de este país gastan mayormente en alojamiento y alimentacion, pero esto no es algo extraño ya que la mayoria de los ingresantes sin importar su nacionalidad (exceptuando Uruguay), gastan mas que nada en esas areas. 
+
+
 ## Otros gráficos
 Realizaremos una serie de gráficos en donde podremos visualizar como afectan simultáneamente dos o más variables al gasto total. 
 ```{r}
+#| include: false
+
 ggplot(data = receptivo_fecha) +
-  geom_mosaic(aes(x = product(Motivo, Pais), fill = GastoTotal_porPersona)) +
+  geom_mosaic(aes(x = product(Motivo, Pais), fill = as.factor(GastoTotal))) +
   labs(title = 'Distribución de Gasto Total según Motivo y País',
        x = 'Motivo y País',
        y = 'Frecuencia',
        fill = 'Gasto Total') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-
 
 ## Arboles y Bosques
 A desarrollar...
