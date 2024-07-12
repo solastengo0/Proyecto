@@ -20,11 +20,16 @@ library(forcats)
 library(knitr)
 library(gt)
 library(ggmosaic)
+<<<<<<< HEAD
 library(caret)
 library(randomForest)
 library(modelr)
 library(rpart)
 library(mice)
+=======
+library(see)
+library(colorspace)
+>>>>>>> 7fd48a49cd539153be145d482e4fb756f07ce9ec
 ```
 
 # Introducción
@@ -40,9 +45,6 @@ La base de datos cuenta con mas de 59500 observaciones y 48 variables entre las 
 #| include: false
 receptivo <- read_excel(here("data", "receptivo.xlsx"))
 diccionario <- read_excel(here("data", "Diccionario.xlsx"))
-
-View(receptivo)
-View(diccionario)
 ```
 
 ```{r}
@@ -90,7 +92,10 @@ ggplot(receptivo) +
   geom_bar(aes(x = fct_rev(fct_infreq(Motivo_otr)), fill = Motivo_otr)) +
   coord_flip()+
   labs(x = "Motivo",
-       y = "Cantidad")
+       y = "Cantidad") +
+  scale_fill_okabeito(order = c(1:3, 5:7)) +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
 ```{r}
@@ -143,13 +148,22 @@ datos <- receptivo |>
 #| out.width: "70%"
 #| out-height: "70%"
 
- ggplot(datos, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
-    geom_col(position = "fill") +
+ ggplot(datos, aes(
+   x = fct_infreq(Pais), 
+   y = proporcion, 
+   fill = Motivo_otr
+    )
+   ) +
+    geom_col(
+      position = "fill",
+      color = "grey8") +
     coord_flip() +
     labs(x = "Nacionalidad", 
-         y = "Proporción acumulada") +
+         y = "Proporción acumulada",
+         fill = "Motivo") +
     scale_y_continuous(labels = scales::percent) +
-    theme_minimal() 
+    scale_fill_okabeito(order = c(1:3, 5:7)) +
+    theme_minimal()
 ```
 
 Respondiendo a las preguntas anteriores, personas de Argentina y Brasil ingresan al país por motivos varios, sin uno que predomine mucho sobre los demás motivos. En cambio, gracias a este gráfico podemos visualizar comportamientos extraños cuando se trata de otros países, por ejemplo el motivo que predomina para que los venezolanos ingresen al país es "Otros", tomando en cuenta la situación política y económica del país tendría sentido que se clasifique en esta categoría sus casos.
@@ -178,16 +192,17 @@ datos2 <- datos2 |>
 #| out-height: "70%"
 
 ggplot(datos2, aes(x = fct_infreq(Pais), y = proporcion, fill = Motivo_otr)) +
-  geom_col(position = "fill") +
+  geom_col(position = "fill", color = "grey8") +
   coord_flip() +
   labs(x = "Nacionalidad",
        y = "Proporción acumulada") +
   scale_y_continuous(labels = scales::percent) +
-  theme_minimal()
+  theme_minimal() +
+  scale_fill_okabeito(order = c(1:3, 5:7))
 ```
 
 
-Observamos que en general las personas ingresantes al país con nacionalidades europeas o asiáticas, lo hacen con diferentes fines, sin uno que predomine sobre otros. Excepto cuando se trata de las personas provenientes de Suecia, en este caso vemos que el mayor motivo por el que ingresan al país es debido a que éste es su segunda residencia, este dato llama la atención ya que es la única nacionalidad en la que sucede este caso.
+Observamos que en general las personas ingresantes al país con nacionalidades europeas o asiáticas, lo hacen con diferentes fines, sin uno que predomine sobre otros. Excepto cuando se trata de las personas provenientes de Suecia: este caso llama la atención, pero la predominancia de integrantes con segunda residencia, en realidad se da por la generalización que hicimos antes en la que agrupamos los motivos menos frecuentes y porque contamos con muy pocas observaciones provenientes de suecia en nuestra base de datos.
 
 ## Gasto en alojamiento
 
@@ -209,16 +224,71 @@ En la tabla 4 podemos ver que la forma de alojamiento que es mas usual entre los
 #| out.width: "70%"
 #| out-height: "70%"
 
-receptivo %>% 
-  group_by(Alojamiento) %>% 
-  ggplot(aes(x = GastoAlojamiento, y = Alojamiento)) +
-  geom_bar(stat = "identity") +
+color_data <- receptivo %>% 
+  group_by(Alojamiento) |> 
+  summarise(sum = sum(GastoAlojamiento)) |> 
+  arrange(sum) |>
+  filter(sum > 8000) |> 
+  mutate(Alojamiento_color = ifelse(
+    Alojamiento %in% c(
+      "Vivienda familiares/amigos residentes", "Vivienda propia", "Vivienda arrendada"),
+    "highlight", 
+    Alojamiento)) |> 
+  mutate(Alojamiento_color = factor(Alojamiento_color, levels = c(
+    "Vivienda familiares/amigos no residentes",
+    "Estancia Turistica", 
+    "Otros", 
+    "Motor Home",
+    "Camping",
+    "Hotel/Albergue",
+    "Hotel 1 y 2 estrellas",
+    "Cabañas/Bungalows",
+    "Hotel 5 estrellas",
+    "Appart Hotel", "Vivienda arrendada por plataforma", 
+    "Hotel 4 estrellas",
+    "Hotel sin categorizar",
+    "Hotel 3 estrellas", 
+    "highlight")))
+
+color_acc <- c(desaturate(lighten(c("#E69F00", "#56B4E9", "#009E73", "#f9b380", "#E69F00", "#CC79A7", "#D55E00", "#1b9e77", "#d95f02", "#7570b3", "#e7298a", "#e6ab02", "#462d59", "#c37e86"), .4), .8), darken("#56B4E9", .3))
+
+ggplot(
+  data = color_data,
+  aes(
+    x = sum,
+    y = fct_inorder(Alojamiento),
+    fill = Alojamiento_color
+    )
+  ) +
+  geom_col() +
   labs(
-    x = "Gasto en Alojamiento") +
+    x = "Gasto en Alojamiento",
+    y = "Alojamiento"
+    ) +
+  scale_fill_manual(values = color_acc,
+    breaks = c(
+    "Vivienda familiares/amigos no residentes",
+    "Estancia Turistica", 
+    "Otros", 
+    "Motor Home",
+    "Camping",
+    "Hotel/Albergue",
+    "Hotel 1 y 2 estrellas",
+    "Cabañas/Bungalows",
+    "Hotel 5 estrellas",
+    "Appart Hotel", "Vivienda arrendada por plataforma", 
+    "Hotel 4 estrellas",
+    "Hotel sin categorizar",
+    "Hotel 3 estrellas", 
+    "highlight")
+  ) +
+  theme_minimal() +
   theme(
     axis.ticks.x = element_blank(),
-    axis.text.x = element_blank()
-  )
+    axis.text.x = element_blank(),
+    legend.position = "none"
+    )
+    
 ```
 En la figura 4 vemos como las personas que pertenecen al grupo de "vivienda familiares/amigos residentes" cuando se trata del alojamiento son de los que menos gastan en este, por lo tanto podemos decir que el supuesto anterior se cumple. 
 En este gráfico también llama la atención que las personas que ingresan al país y cuentan con vivienda propia son de las personas que mas gastan en alojamiento, por lo que podríamos suponer que estas personas se encuentran en proceso de pagar tal vivienda.
@@ -246,14 +316,25 @@ Para responder esta pregunta realizamos el siguiente gráfico
 #| out-height: "70%"
 
 receptivo %>% 
-  ggplot(aes(y = TransporteLocal, x = GastoTransporte)) +
+  group_by(TransporteLocal) |> 
+  summarise(sum = sum(GastoTransporte)) |> 
+  arrange(sum) |> 
+  ggplot(aes(
+     x = sum,
+     y = fct_inorder(TransporteLocal),
+     fill = TransporteLocal
+     )
+     ) +
   geom_bar(stat = "identity") +
   labs(x = "Gasto en Transporte",
        y = "Transporte Local") +
+  scale_fill_okabeito() +
+  theme_minimal() +
   theme(
     axis.ticks.x = element_blank(),
-    axis.text.x = element_blank()
-  )
+    axis.text.x = element_blank(),
+    legend.position = "none"
+    )
 ```
 En la Figura 5 podemos ver que todos los gastos relacionados a auto propio como transporte local, parecen estar incluidos en la variable de gasto en transporte.
 
@@ -542,7 +623,13 @@ library(ggmosaic)
 receptivo_fecha_dia |> 
   filter(Pais %in% c("Mexico", "Uruguay") & Motivo %in% c("Ocio y vacaciones", "Visita a familiares y amigos" , "Trabajo / Profesional", "Segunda Residencia")) |> 
 ggplot() +
- geom_mosaic(aes(x = product(Motivo, Pais), fill= Motivo))
+ geom_mosaic(aes(
+   x = product(Motivo, Pais), 
+   fill= Motivo
+   ), 
+   color = "grey8"
+   ) +
+  scale_fill_okabeito(order = c(1,2,5,6))
 ```
 Ahora podemos hacer otro grafico para ver en que se diferencian los gastos de los turistas mexicanos a los de los uruguayos.
 
@@ -570,9 +657,17 @@ datos_largos$TipoGasto <- factor(datos_largos$TipoGasto,
                                             "Gasto Transporte"))
 
 ggplot(data = datos_largos) +
-  geom_mosaic(aes(weight = Gasto, x = product(Motivo), fill = TipoGasto), na.rm = TRUE) +
+  geom_mosaic(aes(
+    weight = Gasto, 
+    x = product(Motivo), 
+    fill = TipoGasto
+    ), 
+    na.rm = TRUE, 
+   color = "grey8"
+   ) +
   labs(x = "Motivo", y = "Gasto", fill = "Tipo de Gasto") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_okabeito(order = c(1,2,5,6))
 ```
 
 ```{r}
@@ -602,9 +697,17 @@ datos_largos$TipoGasto <- factor(datos_largos$TipoGasto,
 
 
 ggplot(data = datos_largos) +
-  geom_mosaic(aes(weight = Gasto, x = product(Pais), fill = TipoGasto), na.rm = TRUE) +
-  labs(x = "País", y = "Gasto", fill = "Tipo de Gasto") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  geom_mosaic(aes(
+    weight = Gasto, 
+    x = product(Pais), 
+    fill = TipoGasto
+    ), 
+    na.rm = TRUE, 
+   color = "grey8"
+    ) +
+  labs(x = "Pais", y = "Gasto", fill = "Tipo de Gasto") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_okabeito(order = c(1,2,5,6))
 ```
 Viendo en conjunto la figura 7 y 8, nos damos cuenta de una clara diferencia en el motivo del viaje, los mexicanos ingresan al pais mayormente con el fin de vacacionar, en cambio los uruguayos lo hacen para visitar a sus familiares y amigos. Tambien vemos que en el caso de los mexicanos gastan más del doble en alojamiento de lo que gastan los uruguayos. Por lo tanto podriamos conlcuir que el motivo por el que los ingresantes con nacionalidad mexicana sean los que mas gastan en el pais de toda america, es que entran al pais por ocio y vacaciones y gastan mucho en alojamiento.
 
