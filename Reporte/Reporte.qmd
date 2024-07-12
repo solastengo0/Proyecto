@@ -20,6 +20,11 @@ library(forcats)
 library(knitr)
 library(gt)
 library(ggmosaic)
+library(caret)
+library(randomForest)
+library(modelr)
+library(rpart)
+library(mice)
 ```
 
 # Introducción
@@ -617,14 +622,46 @@ ggplot(data = receptivo_fecha) +
 ```
 
 ## Arboles y Bosques
-A desarrollar...
+Intentaremos generar un arbol de decision y un bosque aleatorio, con el fin de predecir el gasto total por persona segun las demas variables con las que contamos.
+```{r}
+datos <- read_excel(here("data","receptivo_fecha.xlsx"))
+
+variablesElegidas <- c("GastoTotal_porPersona", "Motivo", "Estudio", "Alojamiento", "Ocupacion", "TransporteLocal")
+datos2 <- datos[variablesElegidas]
+datos2[is.na(datos2$Estudio), 'Estudio'] = 'Sin informacion'
+```
+
+```{r}
+set.seed(33) 
+
+entrenamiento <- sample(1:nrow(datos2), 0.7 * nrow(datos2))  
+desarrollo <- datos2[entrenamiento, ]
+testeo <- datos2[-entrenamiento, ]
+```
+
+```{r}
+#arbol
+arbol <- rpart(GastoTotal_porPersona ~ ., data = desarrollo)
+
+# Entrenamiento
+arbol_predict_training = predict(arbol, desarrollo)
+error_training = sqrt(mean((arbol_predict_training - desarrollo$GastoTotal_porPersona)^2))
+
+df = data.frame(
+  predicciones = arbol_predict_training,
+  valores_reales = desarrollo$GastoTotal_porPersona
+)
+```
+En el análisis realizado, utilizamos un árbol de decisión y un bosque aleatorio para predecir el gasto total por persona (GastoTotal_porPersona) de los visitantes en Uruguay. Sin embargo, nos dimos cuenta de que ambos modelos no logran captar bien los valores reales, y suelen subestimarlos. Uno de los problemas principales es que el error cuadrático medio (RMSE) está en unidades al cuadrado de la variable original, lo que hace que el error parezca más grande y difícil de interpretar.
+
+Durante el curso, no se nos presentaron las herramientas necesarias para solucionar estos errores y mejorar el modelo. Así que, básicamente, el modelo "da mal y ya". Para solucionar esto en el futuro, sería útil tener más variables o diferentes tipos de variables, pero eso escapa del alcance del curso y los datos que tenemos ahora. Por estas razones, los modelos desarrollados no son adecuados para una predicción precisa en este contexto.
 
 ### Paquetes utilizados y fuente de los datos
 ##### Datos:
-Catalogo de Datos Abiertos. Ministerio de Tursimo. https://catalogodatos.gub.uy/dataset/ministerio-de-turismo-turismo-receptivo
+Catalogo de Datos Abiertos. Ministerio de Tursimo. <https://catalogodatos.gub.uy/dataset/ministerio-de-turismo-turismo-receptivo>
 
 ##### Paquetes:
- H. Wickham. ggplot2: Elegant Graphics for Data Analysis.
+H. Wickham. ggplot2: Elegant Graphics for Data Analysis.
   Springer-Verlag New York, 2016.
 Wickham H, François R, Henry L, Müller K, Vaughan D (2023). _dplyr: A Grammar of Data Manipulation_. R
   package version 1.1.2, <https://CRAN.R-project.org/package=dplyr>.
