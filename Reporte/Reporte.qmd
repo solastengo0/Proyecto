@@ -20,16 +20,13 @@ library(forcats)
 library(knitr)
 library(gt)
 library(ggmosaic)
-<<<<<<< HEAD
 library(caret)
 library(randomForest)
 library(modelr)
 library(rpart)
 library(mice)
-=======
 library(see)
 library(colorspace)
->>>>>>> 7fd48a49cd539153be145d482e4fb756f07ce9ec
 ```
 
 # Introducción
@@ -766,7 +763,24 @@ Catalogo de Datos Abiertos. Ministerio de Tursimo. <https://catalogodatos.gub.uy
 ##### Paquetes:
 H. Wickham. ggplot2: Elegant Graphics for Data Analysis.
   Springer-Verlag New York, 2016.
-Wickham H, François R, Henry L, Müller K, Vaughan D (2023). _dplyr: A Grammar of Data Manipulation_. R
-  package version 1.1.2, <https://CRAN.R-project.org/package=dplyr>.
-
-
+Wickham H, Averick M, Bryan J, Chang W,
+  McGowan LD, François R, Grolemund G, Hayes
+  A, Henry L, Hester J, Kuhn M, Pedersen TL,
+  Miller E, Bache SM, Müller K, Ooms J,
+  Robinson D, Seidel DP, Spinu V, Takahashi K,
+  Vaughan D, Wilke C, Woo K, Yutani H (2019).
+  “Welcome to the tidyverse.” _Journal of Open
+  Source Software_, *4*(43), 1686.
+  doi:10.21105/joss.01686
+  <https://doi.org/10.21105/joss.01686>.
+Jeppson H, Hofmann H, Cook D (2021).
+  _ggmosaic: Mosaic Plots in the 'ggplot2'
+  Framework_. R package version 0.3.3,
+  <https://CRAN.R-project.org/package=ggmosaic>.
+Therneau T, Atkinson B (2023). _rpart:
+  Recursive Partitioning and Regression
+  Trees_. R package version 4.1.23,
+  <https://CRAN.R-project.org/package=rpart>.
+A. Liaw and M. Wiener (2002). Classification
+  and Regression by randomForest. R News 2(3),
+  18--22.
