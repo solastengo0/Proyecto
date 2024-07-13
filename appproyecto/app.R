@@ -1,8 +1,9 @@
 library(shiny)
 library(tidyverse)
 library(readxl)
+library(here)
 
-receptivo_fecha <- read_excel("receptivo_fecha.xlsx")
+datos <- read_excel(here("appproyecto/datos_filtrados.xlsx"))
 
 columnas_gasto <- c("GastoAlojamiento_porPersona", "GastoAlimentacion_porPersona", 
                     "GastoTransporte_porPersona", "GastoCultural_porPersona", 
@@ -15,7 +16,7 @@ ui <- fluidPage(
     tabPanel( "Motivo",
       sidebarLayout(
         sidebarPanel(
-          selectInput('motivo', 'Seleccionar Motivo', unique(receptivo_fecha$Motivo))
+          selectInput('motivo', 'Seleccionar Motivo', unique(datos$Motivo))
           ),
         mainPanel(
           h2("Gastos por Persona según Motivo", align = "center"),
@@ -26,7 +27,7 @@ ui <- fluidPage(
   tabPanel("Nacionalidad", 
    sidebarLayout(
     sidebarPanel(
-      selectInput('nacionalidad', 'Seleccionar nacionalidad', unique(receptivo_fecha$Pais))
+      selectInput('nacionalidad', 'Seleccionar nacionalidad', unique(datos$Pais))
     ),
     mainPanel(
       h2("Gastos por Persona según nacionalidad", align = "center"),
@@ -37,7 +38,7 @@ ui <- fluidPage(
   tabPanel("Nivel de Educacion",
    sidebarLayout(
     sidebarPanel(
-       selectInput('Educacion', 'Seleccionar nivel de educacion', unique(receptivo_fecha$Estudio))
+       selectInput('Educacion', 'Seleccionar nivel de educacion', unique(datos$Estudio))
      ),
     mainPanel(
       h2("Gastos por Persona según nivel de educacion", align = "center"),
@@ -48,7 +49,7 @@ ui <- fluidPage(
   tabPanel("Ocupacion",
    sidebarLayout(
     sidebarPanel(
-       selectInput('ocupacion', 'Seleccionar ocupacion', unique(receptivo_fecha$Ocupacion))
+       selectInput('ocupacion', 'Seleccionar ocupacion', unique(datos$Ocupacion))
    ),
    mainPanel(
      h2("Gastos por Persona según ocupacion", align = "center"),
@@ -59,7 +60,7 @@ ui <- fluidPage(
   tabPanel("Transporte de Ingreso",
    sidebarLayout(
     sidebarPanel(
-       selectInput('ingreso', 'Seleccionar transporte de ingreso', unique(receptivo_fecha$`Transporte Internacional de Ingreso`))
+       selectInput('ingreso', 'Seleccionar transporte de ingreso', unique(datos$`Transporte Internacional de Ingreso`))
    ),
   mainPanel(
     h2("Gastos por Persona según metodo de ingreso", align = "center"),
@@ -70,7 +71,7 @@ ui <- fluidPage(
   tabPanel("Transporte de Egreso",
    sidebarLayout(
     sidebarPanel(
-      selectInput('egreso', 'Seleccionar metodo de egreso', unique(receptivo_fecha$`Transporte Internacional de Egreso`))
+      selectInput('egreso', 'Seleccionar metodo de egreso', unique(datos$`Transporte Internacional de Egreso`))
    ),
    mainPanel(
      h2("Gastos por Persona según metodo de ingreso", align = "center"),
@@ -82,7 +83,7 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   output$gastosPlot <- renderPlot({
-    datos_filtrados <- receptivo_fecha %>%    ##motivo
+    datos_filtrados <- datos %>%    ##motivo
       filter(Motivo == input$motivo) %>%
       select(Motivo, all_of(columnas_gasto))
     
@@ -110,7 +111,7 @@ server <- function(input, output) {
   })
   
   output$gastosPlotn <- renderPlot({
-    datos_filtrados <- receptivo_fecha %>% 
+    datos_filtrados <- datos %>% 
       filter(Pais == input$nacionalidad) %>%     ##nacionalidad
       select(Pais, all_of(columnas_gasto))
     
@@ -137,7 +138,7 @@ server <- function(input, output) {
   })
   
   output$gastosPlote <- renderPlot({
-    datos_filtrados <- receptivo_fecha %>% 
+    datos_filtrados <- datos %>% 
       filter(Estudio == input$Educacion) %>%        ##educacion
       select(Estudio, all_of(columnas_gasto))
     
@@ -164,7 +165,7 @@ server <- function(input, output) {
   })
   
   output$gastosPloto <- renderPlot({
-    datos_filtrados <- receptivo_fecha %>% 
+    datos_filtrados <- datos %>% 
       filter(Ocupacion == input$ocupacion) %>%        ##ocupacion
       select(Ocupacion, all_of(columnas_gasto))
     
@@ -191,7 +192,7 @@ server <- function(input, output) {
   })
   
   output$gastosPloti <- renderPlot({
-    datos_filtrados <- receptivo_fecha %>% 
+    datos_filtrados <- datos %>% 
       filter(`Transporte Internacional de Ingreso` == input$ingreso) %>%        ##ingreso
       select(`Transporte Internacional de Ingreso`, all_of(columnas_gasto))
     
@@ -218,7 +219,7 @@ server <- function(input, output) {
   })
   
   output$gastosPloteg <- renderPlot({
-    datos_filtrados <- receptivo_fecha %>% 
+    datos_filtrados <- datos %>% 
       filter(`Transporte Internacional de Egreso` == input$egreso) %>%        ##egreso
       select(`Transporte Internacional de Egreso`, all_of(columnas_gasto))
     
