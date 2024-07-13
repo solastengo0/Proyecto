@@ -498,7 +498,7 @@ Nuestra app consta con varias pestañas, cada una asignada a una variable de int
 Al ser la base de datos bastante pesada y quizá también el código de la shiny, al querer subir la app a shinyapps.io nos devuelve un error de almacenamiento haciendo referencia a que consume mucha memoria.
 Intentamos reducir la base de datos considerablemente y hasta quitar pestañas para hacer más liviano el código, pero sin resultado. 
 Creemos que seguirle quitando información y código buscando la posibilidad de subirla haría que en el proceso se perdiera la capacidad de esta de reflejar correctamente la distribución que nos interesa.
-(La app está disponible en el repositorio de GitHub donde está publicado también el proyecto.)
+(La app está disponible en el repositorio de GitHub, carpeta "app proyecto")
 
 
 
