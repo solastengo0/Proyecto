@@ -494,6 +494,14 @@ Para cumplir con lo deseado, utilizaremos una serie de herramientas, comenzaremo
 ## Shiny App
 Para permitir una visualización interactiva de cómo los visitantes gastan en diversas áreas, optamos por una serie de gráficos en los cuales también se tomaran en cuenta otras variables, como el motivo del viaje, la nacionalidad del visitante, el nivel de educación de este, entre otras, y de esta forma podremos ver como influyen las demás variables en los gastos en diferentes areas.
 
+Nuestra app consta con varias pestañas, cada una asignada a una variable de interés, dentro de la cual se despliega un gráfico de distribución del gasto según el valor de la variable que deseemos ver.
+Al ser la base de datos bastante pesada y quizá también el código de la shiny, al querer subir la app a shinyapps.io nos devuelve un error de almacenamiento haciendo referencia a que consume mucha memoria.
+Intentamos reducir la base de datos considerablemente y hasta quitar pestañas para hacer más liviano el código, pero sin resultado. 
+Creemos que seguirle quitando información y código buscando la posibilidad de subirla haría que en el proceso se perdiera la capacidad de esta de reflejar correctamente la distribución que nos interesa.
+(La app está disponible en el repositorio de GitHub donde está publicado también el proyecto.)
+
+
+
 ```{r}
 #| include: false
 
