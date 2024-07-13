@@ -104,7 +104,8 @@ server <- function(input, output) {
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
            title = paste("Gastos por Persona para el Motivo:", input$motivo)) +
-      theme(axis.text.x = element_blank())
+      theme(axis.text.x = element_blank()) +
+      scale_fill_okabeito()
       
   })
   
@@ -131,7 +132,8 @@ server <- function(input, output) {
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
            title = paste("Gastos por Persona para la nacionalidad:", input$nacionalidad)) +
-      theme(axis.text.x = element_blank())
+      theme(axis.text.x = element_blank()) +
+      scale_fill_okabeito()
   })
   
   output$gastosPlote <- renderPlot({
@@ -157,7 +159,8 @@ server <- function(input, output) {
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
            title = paste("Gastos por Persona para nivel de estudio:", input$Educacion)) +
-      theme(axis.text.x = element_blank())
+      theme(axis.text.x = element_blank()) +
+      scale_fill_okabeito()
   })
   
   output$gastosPloto <- renderPlot({
@@ -183,7 +186,8 @@ server <- function(input, output) {
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
            title = paste("Gastos por Persona para nivel de estudio:", input$ocupacion)) +
-      theme(axis.text.x = element_blank())
+      theme(axis.text.x = element_blank()) +
+      scale_fill_okabeito()
   })
   
   output$gastosPloti <- renderPlot({
@@ -209,7 +213,8 @@ server <- function(input, output) {
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
            title = paste("Gastos por Persona para nivel de estudio:", input$ingreso)) +
-      theme(axis.text.x = element_blank())
+      theme(axis.text.x = element_blank()) +
+      scale_fill_okabeito()
   })
   
   output$gastosPloteg <- renderPlot({
@@ -235,7 +240,8 @@ server <- function(input, output) {
       theme_minimal() +
       labs(x = "Tipo de Gasto", y = "Gasto por Persona", 
            title = paste("Gastos por Persona para nivel de estudio:", input$egreso)) +
-      theme(axis.text.x = element_blank())
+      theme(axis.text.x = element_blank()) +
+      scale_fill_okabeito()
   })
 }
 
