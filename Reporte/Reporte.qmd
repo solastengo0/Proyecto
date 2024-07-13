@@ -599,7 +599,8 @@ geom_polygon(aes(group = group, fill = Gasto_Medio_Pers_Dia)) +
   scale_fill_viridis_c(option = "D") +
 geom_path(aes(group = group), linewidth = 1/10) + 
   scale_x_continuous(limits = c(-180, -25)) + 
-  labs(fill = "Gasto medio por persona (por dia)")
+  labs(fill = "Gasto medio por persona (por dia)") +
+  theme_radar()
 ```
 
 Nos gustaría resaltar que para la creación de este mapa debimos generalizar un poco para una mejor visualizacion de los datos en el mapa, ya que no contamos con datos de algunos países.
