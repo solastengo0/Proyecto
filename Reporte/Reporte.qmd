@@ -509,7 +509,7 @@ Creemos que seguirle quitando información y código buscando la posibilidad de 
 ```
 
 ## Mapa de Uruguay
-Nos interesa saber como se distribuye el gasto total en el interior del país, contamos con la variable "Departamento" que como anteriormente se visualiza en la tabla 1, nos indica cual es el país de destino del visitante, supondremos que allí se efectuarán la mayoría de los gastos y de esa forma generaremos un mapa que marcará con colores mas oscuros los departamentos en donde se producirá mayor gasto por los ingresantes.
+Nos interesa observar como distribuye el gasto por persona segun nacionalidades (solo americanas) de los turistas.
 
 ```{r}
 #| include: false
