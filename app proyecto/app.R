@@ -2,8 +2,7 @@ library(shiny)
 library(tidyverse)
 library(readxl)
 
-#receptivo_fecha <- read_excel("receptivo_fecha.xlsx")
-receptivo_fecha = arrow::read_feather("receptivo_fecha.arrow")
+receptivo_fecha <- read_excel("receptivo_fecha.xlsx")
 
 
 columnas_gasto <- c("GastoAlojamiento_porPersona", "GastoAlimentacion_porPersona", 
